@@ -1,0 +1,27 @@
+{
+  "name": "express-sequelize-restful-resources",
+  "version": "1.0.0",
+  "description": "Using Sequelize ORM for nodejs for Express RESTful Services (Endpoints)",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon index.js"
+  },
+  "keywords": [
+    "Sequelize",
+    "ORM",
+    "Express",
+    "RESTful"
+  ],
+  "author": "Fatih ŞEN",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.14.0",
+    "rxjs": "^5.0.3",
+    "sequelize": "^3.30.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.0.35",
+    "@types/node": "^7.0.4",
+    "@types/sequelize": "^4.0.39"
+  }
+}
