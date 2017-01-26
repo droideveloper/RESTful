@@ -1,5 +1,5 @@
 {
-  "name": "restful-express",
+  "name": "restful-express-sequelize",
   "version": "1.0.0",
   "description": "Using Sequelize ORM for nodejs for Express RESTful Services (Endpoints)",
   "main": "index.js",
@@ -9,7 +9,7 @@
   },
   "keywords": [
     "Sequelize",
-    "ORM",
+    "ORM",git
     "Express",
     "RESTful"
   ],
