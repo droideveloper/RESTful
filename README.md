@@ -27,17 +27,15 @@ response are wrapped as follows
 
   ```json
   {
-    code: 200, // 200 - 500 http response codes
-    message: "success", // message string
-    data: [{
-      //... object properties
-    }], // (can be null or empty array)
-    count: 1, // count of array
-    href: "$href", // href 
-    next: "$next", // if there is next, simply calculated from (offset and limit) (optional)
-    previous: "$previous", // if there is previous, simply calculated from (offset and limit) (optional)
-    limit: 25,
-    offset: 0
+    "code": 200,
+    "message": "success",
+    "data": [{ }],
+    "count": 1, 
+    "href": "$href", 
+    "next": "$next", 
+    "previous": "$previous", 
+    "limit": 25,
+    "offset": 0
   }
   ```
 
@@ -45,11 +43,9 @@ response are wrapped as follows
 
   ```json
   {
-    code: 200, // 200 - 500 http response codes
-    message: "success", // message string
-    data: { 
-      // ... object properties
-    } // object or primitive or null
+    "code": 200,
+    "message": "success",
+    "data": { } 
   }
   ```
 
