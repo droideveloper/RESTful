@@ -134,6 +134,10 @@ var Urlify = (function () {
             }
             return url.concat("/", pathCollection[0], "/", data.id.toString());
         }
+        // if this object is already in detail context in use.
+        if (req.url.indexOf("/".concat(data.id.toString())) !== -1) {
+            return url.concat(req.url);
+        }
         return url.concat(req.url, "/", data.id.toString());
     };
     /**

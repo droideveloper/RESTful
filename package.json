@@ -1,13 +1,13 @@
 {
   "name": "restful-express-sequelize",
-  "version": "1.0.9",
+  "version": "1.1.2",
   "description": "Using Sequelize ORM for nodejs for Express RESTful Services (Endpoints)",
   "main": "index.js",
   "types": "index.d.ts",
-  "scripts": {
-    "start": "nodemon index.js"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/droideveloper/RESTful"
   },
-  "git": "https://github.com/droideveloper/RESTful",
   "keywords": [
     "Sequelize",
     "ORM",
