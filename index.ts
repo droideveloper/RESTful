@@ -18,11 +18,12 @@ export class Resource {
    * Register as array or single
    */
   public static register<T, V>(server: Express, options: Array<ResourceOption<T, V>>, base?: string): void {
-    options.forEach((option: ResourceOption<T, V>) => {
+    options.forEach((option: ResourceOption<T, V>): void => {
       if (base) {
         server.use(base, Resource.route(option));
+      } else {
+        server.use(Resource.route(option));
       }
-      server.use(Resource.route(option));
     });
   }
   /**

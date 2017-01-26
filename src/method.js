@@ -1,6 +1,6 @@
 "use strict";
-var data_1 = require("./data");
-var Observable_1 = require("rxjs/Observable");
+var Utilities = require("./data");
+var Rx = require("rxjs/Observable");
 require("rxjs/add/observable/fromPromise");
 require("rxjs/add/observable/empty");
 require("rxjs/add/observable/of");
@@ -51,7 +51,7 @@ var Selectify = (function () {
     Selectify.prototype.filter = function (properties, entity) {
         var filtered = {};
         properties.forEach(function (property) { return filtered[property] = entity[property]; });
-        return data_1.isNullOrEmpty(filtered) ? entity : filtered;
+        return Utilities.isNullOrEmpty(filtered) ? entity : filtered;
     };
     return Selectify;
 }());
@@ -123,9 +123,9 @@ var Urlify = (function () {
      * create object href.
      */
     Urlify.prototype.object = function (req, data) {
-        var url = data_1.toString("%s://%s%s", req.protocol, req.hostname, req.baseUrl);
+        var url = Utilities.toString("%s://%s%s", req.protocol, req.hostname, req.baseUrl);
         var collection = req.url.split("/").map(function (d) { return d.trim(); });
-        if (!data_1.isNullOrEmpty(req.query)) {
+        if (!Utilities.isNullOrEmpty(req.query)) {
             // if url has any kind of query then we split it before we format content (index 0 was problem, it should be index 1)
             var pathCollection = collection[1].split("?").map(function (d) { return d.trim(); });
             // detail object might contain only select query for filtering on properties.      
@@ -146,12 +146,12 @@ var Urlify = (function () {
     Urlify.prototype.collection = function (req, count) {
         var self = this;
         var collectionArgs = {
-            href: data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url),
+            href: Utilities.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url),
             limit: parseInt(req.query.limit || 25),
             offset: parseInt(req.query.offset || 0),
             count: count
         };
-        var uri = data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
+        var uri = Utilities.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
         var hasNext = count >= collectionArgs.limit;
         if (hasNext) {
             collectionArgs.next = self.properties(uri, req.query, (collectionArgs.offset + collectionArgs.limit));
@@ -198,7 +198,7 @@ var All = (function () {
     All.prototype.on = function (req, res, model) {
         var limit = parseInt(req.query.limit || 25); // defults for 'limit'
         var offset = parseInt(req.query.offset || 0); // defults for 'offset'
-        Observable_1.Observable.fromPromise(model.all({
+        Rx.Observable.fromPromise(model.all({
             limit: limit,
             offset: offset
         })).map(function (entities) { return objectify.on(entities); })
@@ -232,17 +232,17 @@ var Detail = (function () {
     Detail.prototype.on = function (req, res, model) {
         var objectId = parseInt(req.params.id || 0);
         if (objectId > 0) {
-            Observable_1.Observable.fromPromise(model.find({
+            Rx.Observable.fromPromise(model.find({
                 where: {
                     id: objectId
                 }
             })).map(function (entity) { return objectify.on(entity); })
                 .mergeMap(function (entity) {
-                if (data_1.isNullOrEmpty(entity)) {
+                if (Utilities.isNullOrEmpty(entity)) {
                     res.json({ code: 400, message: "no such object exists.", data: null });
-                    return Observable_1.Observable.empty();
+                    return Rx.Observable.empty();
                 }
-                return Observable_1.Observable.of(entity);
+                return Rx.Observable.of(entity);
             }).map(function (entity) { return urlify.on(req, entity); })
                 .map(function (entity) { return selectify.on(req, entity); })
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
@@ -263,8 +263,8 @@ var Create = (function () {
     }
     Create.prototype.on = function (req, res, model) {
         var object = (req.body || {});
-        if (!data_1.isNullOrEmpty(object)) {
-            Observable_1.Observable.fromPromise(model.create(object)).map(function (entity) { return objectify.on(entity); })
+        if (!Utilities.isNullOrEmpty(object)) {
+            Rx.Observable.fromPromise(model.create(object)).map(function (entity) { return objectify.on(entity); })
                 .map(function (entity) { return urlify.on(req, entity); })
                 .map(function (entity) { return selectify.on(req, entity); })
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
@@ -286,8 +286,8 @@ var Update = (function () {
     Update.prototype.on = function (req, res, model) {
         var objectId = parseInt(req.params.id || 0);
         var object = (req.body || {});
-        if (objectId > 0 && !data_1.isNullOrEmpty(object)) {
-            Observable_1.Observable.fromPromise(model.update(object, {
+        if (objectId > 0 && !Utilities.isNullOrEmpty(object)) {
+            Rx.Observable.fromPromise(model.update(object, {
                 where: {
                     id: objectId
                 }
@@ -311,7 +311,7 @@ var Remove = (function () {
     Remove.prototype.on = function (req, res, model) {
         var objectId = parseInt(req.params.id || 0);
         if (objectId > 0) {
-            Observable_1.Observable.fromPromise(model.destroy({
+            Rx.Observable.fromPromise(model.destroy({
                 where: {
                     id: objectId
                 }
