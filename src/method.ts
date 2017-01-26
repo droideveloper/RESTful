@@ -86,7 +86,7 @@ class Sortify<T extends SEntity> implements SQuery<T> {
    * sort property and type from query of request.
    */
   private sorts(req: Request): SSortArgs {
-    const args: Array<string> = (<string> req.query.select || "")
+    const args: Array<string> = (<string> req.query.sort || "")
       .split(",")
       .map((sort: string) => sort.trim());
 
@@ -121,15 +121,15 @@ class Urlify<T extends SEntity> implements SQuery<T> {
     const url: string = toString("%s://%s%s", req.protocol, req.hostname, req.baseUrl);
     const collection: Array<string> = req.url.split("/").map(d => d.trim());
     if (!isNullOrEmpty(req.query)) {
-      // if url has any kind of query then we split it before we format content
-      const pathCollection: Array<string> = collection[0].split("?").map(d => d.trim());
-      // detail object might contain only select query for filtering on properties.
+      // if url has any kind of query then we split it before we format content (index 0 was problem, it should be index 1)
+      const pathCollection: Array<string> = collection[1].split("?").map(d => d.trim());
+      // detail object might contain only select query for filtering on properties.      
       if (req.query.select) {
         return url.concat("/", pathCollection[0], "/", data.id.toString(), "?select=", req.query.select);
       }
       return url.concat("/", pathCollection[0], "/", data.id.toString());
     }
-    return url.concat("/", collection[0], "/", data.id.toString());
+    return url.concat(req.url, "/", data.id.toString());
   }
   /**
    * create collection of object href.
@@ -142,7 +142,7 @@ class Urlify<T extends SEntity> implements SQuery<T> {
       offset: parseInt(req.query.offset || 0),
       count: count
     };
-    const uri = toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || ""));
+    const uri = toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
     const hasNext = count >= collectionArgs.limit;
     if (hasNext) {
       collectionArgs.next = self.properties(uri, req.query, (collectionArgs.offset + collectionArgs.limit));
@@ -182,7 +182,7 @@ const urlify = new Urlify();
 /**
  * Implementation of SRequest for All.
  */
-class All<T, V> implements SRequest<T, V> {
+export class All<T, V> implements SRequest<T, V> {
   on(req: Request, res: Response, model: orm.Model<T, V>): void {
     const limit: number = parseInt(req.query.limit || 25); // defults for 'limit'
     const offset: number = parseInt(req.query.offset || 0); // defults for 'offset'
@@ -210,7 +210,7 @@ class All<T, V> implements SRequest<T, V> {
 /**
  * Implementation of SRequest for Detail.
  */
-class Detail<T, V> implements SRequest<T, V> {
+export class Detail<T, V> implements SRequest<T, V> {
   on(req: Request, res: Response, model: orm.Model<T, V>): void {
     const objectId: number = parseInt(req.params.id || 0);
     if (objectId > 0) {
@@ -239,7 +239,7 @@ class Detail<T, V> implements SRequest<T, V> {
 /**
  * Implementation of SRequest for Create.
  */
-class Create<T, V> implements SRequest<T, V> {
+export class Create<T, V> implements SRequest<T, V> {
   on(req: Request, res: Response, model: orm.Model<T, V>): void {
     const object: V = <V> (req.body || {});
     if (!isNullOrEmpty(object)) {
@@ -258,7 +258,7 @@ class Create<T, V> implements SRequest<T, V> {
 /**
  * Implementation of SRequest for Update.
  */
-class Update<T, V> implements SRequest<T, V> {
+export class Update<T, V> implements SRequest<T, V> {
   on(req: Request, res: Response, model: orm.Model<T, V>): void {
     const objectId: number = parseInt(req.params.id || 0);
     const object: V = <V> (req.body || {});
@@ -280,7 +280,7 @@ class Update<T, V> implements SRequest<T, V> {
 /**
  * Implementation of SRequest for Remove.
  */
-class Remove<T, V> implements SRequest<T, V> {
+export class Remove<T, V> implements SRequest<T, V> {
   on(req: Request, res: Response, model: orm.Model<T, V>): void {
     const objectId: number = parseInt(req.params.id || 0);
     if (objectId > 0) {

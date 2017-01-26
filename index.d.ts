@@ -1,23 +1,24 @@
-import { Express, Router } from "express";
+/// <reference types="sequelize" />
+/// <reference types="express" />
 import * as orm from "sequelize";
-
-export namespace RESTfulResource {
-
-  /**
-   * @param server app server instance
-   * @param base base url appended for route
-   * @param options required options to pass in
-   */
-  export function register<T, V>(server: Express, base?: string, ...options: Array<RESTfulResourceOption<T, V>>): void;
-
-  /**
-   * @param option required option to pass in
-   * @returns Router instance for express.use()
-   */
-  export function route<T, V>(option: RESTfulResourceOption<T, V>): Router;
+import { Router, Express } from "express";
+/**
+ * Resource Options with model and methods to bind
+ */
+export interface ResourceOption<T, V> {
+    model: orm.Model<T, V>;
+    methods?: Array<string>;
 }
-
-export interface RESTfulResourceOption<T, V> {
-  model: orm.Model<T, V>;
-  methods?: Array<string>;
+/**
+ * Resource implementation
+ */
+export declare class Resource {
+    /**
+     * Register as array or single
+     */
+    static register<T, V>(server: Express, options: Array<ResourceOption<T, V>>, base?: string): void;
+    /**
+     * create route from option
+     */
+    static route<T, V>(option: ResourceOption<T, V>): Router;
 }

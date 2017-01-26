@@ -83,6 +83,4 @@ export function isNullOrEmpty<T>(item: T): boolean {
 /**
  * toString control
  */
-export function toString(format: string, ...args: any[]): string {
-  return util.format(format, args);
-}
+export const toString = util.format;
