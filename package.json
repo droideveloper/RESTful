@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "Using Sequelize ORM for nodejs for Express RESTful Services (Endpoints)",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
-    "test": "nodemon index.js"
+    "start": "nodemon index.js"
   },
   "keywords": [
     "Sequelize",
