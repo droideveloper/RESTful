@@ -53,10 +53,7 @@ class Selectify<T extends SEntity> implements SQuery<T> {
    */
   private filter(properties: Array<string>, entity: T): T {
     const filtered = {};
-    properties.forEach((property: string) => {
-       filtered[property] = entity[property];
-       return filtered;
-    });
+    properties.forEach((property: string): void => filtered[property] = entity[property]);
     return isNullOrEmpty(filtered) ? entity : (<T> filtered);
   }
 }
