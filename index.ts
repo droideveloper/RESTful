@@ -37,7 +37,7 @@ export class Resource {
         case "get": {
           [toString("/%s", path), toString("/%s/:id", path)].forEach((m: string) => {
             route.get(m, (req: Request, res: Response): void => {
-              if (m.indexOf("/:id") !== -1) {
+              if (m.indexOf("/:id") === -1) {
                 httpMethods.all.on(req, res, option.model);
               } else {
                 httpMethods.detail.on(req, res, option.model);
