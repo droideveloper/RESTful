@@ -7,9 +7,10 @@
   "scripts": {
     "start": "nodemon index.js"
   },
+  "git": "https://github.com/droideveloper/RESTful",
   "keywords": [
     "Sequelize",
-    "ORM",git
+    "ORM",
     "Express",
     "RESTful"
   ],
