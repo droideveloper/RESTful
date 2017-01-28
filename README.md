@@ -14,13 +14,13 @@ you are allowed to manipulate proper methods or register only your needs. P.S. (
 supports some default query options:
   
   1. for array Response
-    * select=property1,property2 (any property of model itself and some extras: id, href, createdAt, updatedAt)
-    * sort=property,type (any property of model and type as 'desc' or 'asc' is default )
-    * limit=number (25 is default)
-    * offset=number (0 is default)  
+  * select=property1,property2 (any property of model itself and some extras: id, href, createdAt, updatedAt)
+  * sort=property,type (any property of model and type as 'desc' or 'asc' is default )
+  * limit=number (25 is default)
+  * offset=number (0 is default)  
     
   2. for object Response
-    * select=property1,property2 (any property of model itself and some extras: id, href, createdAt, updatedAt)  
+  * select=property1,property2 (any property of model itself and some extras: id, href, createdAt, updatedAt)  
 
 response are wrapped as follows
 
