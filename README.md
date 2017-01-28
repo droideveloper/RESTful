@@ -1,6 +1,8 @@
 ##  RESTful - is easy to use restful service implementation for express and sequelize ##
 
-Registers your database context on restful definitions for instance your table as "Frameworks" in mysql registered as `/frameworks` for methods:
+Registers your database context on restful definitions, and service is created with it at github [link.](https://github.com/droideveloper/RESTfulExample)
+
+For instance your database table is "Frameworks" in mysql registered as `/frameworks` for methods:
   
   * GET     /frameworks
   * GET     /frameworks/:id
@@ -11,7 +13,7 @@ Registers your database context on restful definitions for instance your table a
 and by passing methods args on your registeration in array `["get", "post", "put", "delete"]`
 you are allowed to manipulate proper methods or register only your needs. P.S. ( as defaults all registered )
 
-supports some default query options:
+supports some default query options;
   
 - for array Response:
   * select=property1,property2 (any property of model itself and some extras: id, href, createdAt, updatedAt)
@@ -22,9 +24,12 @@ supports some default query options:
 - for object Response:
   * select=property1,property2 (any property of model itself and some extras: id, href, createdAt, updatedAt)  
 
-response are wrapped as follows
+response are wrapped as follows;
 
   for array responses:
+
+  `next` or `previous` properties might not exists depending on context. (optionals)
+  `data` property can be `null` or `[]`.
 
   ```json
   {
@@ -42,6 +47,8 @@ response are wrapped as follows
 
   for object or primitive responses:
 
+  `data` property can be `null` or `{}`.
+
   ```json
   {
     "code": 200,
@@ -52,13 +59,17 @@ response are wrapped as follows
 
 ### How to install ###
 
-with node package manager aka npm
+with node package manager aka npm;
 
 `npm install --save restful-express-sequelize`
 
+Documentation for `express` or `sequelize`
+
+[Express](https://expressjs.com/en/4x/api.html) or [Sequelize](http://sequelize.readthedocs.io/en/v3/)
+
 ### How to use ###
 
-if you prefer javascript then in your server.js or index.js file
+if you prefer javascript then in your server.js or index.js file;
 
 ```javascript
 //imports
@@ -66,7 +77,8 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var gzip = require("compression");
 var context = require("restful-express-sequelize");
-// model generted by sequelize-cli aka (sequelize model:create --name Framework --attributes name:string,lang:string)
+// model generted by sequelize-cli
+// (sequelize model:create --name Framework --attributes name:string,lang:string)
 var dbContext = require("./models");
 // bind over ip and port instead of 127.0.0.1
 var port = process.env.PORT || 52192;
@@ -88,11 +100,13 @@ if (dbContext.sequelize) {
 var models = [];
 for (var property in dbContext) {
  if (property !== "sequelize" && property !== "Sequelize") {
-   // register as options you can add { model: xxx, methods: ["get", "post"] } methods are optional 
+   // register as options you can add { model: xxx, methods: ["get", "post"] } 
+   // methods are (optional) defaults all registered ["get", "post", "put", "delete"] 
     models.push({ model: dbContext[property] });
   }
 }
 // finally register your method(s) on base as '/v1/endpoint'
+// base is (optional) context.Resource.register(server, model)
 context.Resource.register(server, models, "/v1/endpoint");
 // start serving
 server.listen(port, host, function () {
@@ -100,7 +114,7 @@ server.listen(port, host, function () {
 });
 ```
 
-if you prefer typescript then in your index.ts or server.ts file
+if you prefer typescript then in your index.ts or server.ts file;
 
 ```typescript
 import * as express from "express";
