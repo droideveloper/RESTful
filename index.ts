@@ -1,13 +1,12 @@
 import * as express from "express";
-import * as orm from "sequelize";
 import { Request, Response, Router, NextFunction, Express } from "express";
-import { toString } from "./src/data";
+import { toString, Model } from "./src/data";
 import { httpMethods } from "./src/method";
 /**
  * Resource Options with model and methods to bind
  */
 export interface ResourceOption<T, V> {
-  model: orm.Model<T, V>;
+  model: Model<T, V>;
   methods?: Array<string>;
 }
 /**

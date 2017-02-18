@@ -1,12 +1,11 @@
-/// <reference types="sequelize" />
 /// <reference types="express" />
-import * as orm from "sequelize";
 import { Router, Express } from "express";
+import { Model } from "./src/data";
 /**
  * Resource Options with model and methods to bind
  */
 export interface ResourceOption<T, V> {
-    model: orm.Model<T, V>;
+    model: Model<T, V>;
     methods?: Array<string>;
 }
 /**

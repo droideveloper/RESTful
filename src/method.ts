@@ -2,17 +2,24 @@ import { Request, Response } from "express";
 import {
   SRequest, SResponse, SObject, SQuery,
   SEntity, SSortArgs, SCollectionArgs,
-  isNullOrEmpty, toString
+  isNullOrEmpty, toString, Model
 } from "./data";
 import { Observable } from "rxjs/Observable";
 import * as promise from "bluebird";
-import * as orm from "sequelize";
 import "rxjs/add/observable/fromPromise";
 import "rxjs/add/observable/empty";
 import "rxjs/add/observable/of";
 import "rxjs/add/operator/map";
 import "rxjs/add/operator/concatMap";
 import "rxjs/add/operator/mergeMap";
+/**
+ * parse key-value
+ */
+const toWhere = function(key: string, value: any) {
+  const opt = { where: { }};
+  opt.where[key] = value;
+  return opt;
+};
 /**
  * Implementation of SObject
  */
@@ -167,9 +174,10 @@ class Urlify<T extends SEntity> implements SQuery<T> {
    * read properties on query and write them again, as long as it is not `offset`
    */
   private properties(uri: string, query: any, offset: number): string {
+    const self = this;
     for (const property in query) {
       if (query.hasOwnProperty(property)) {
-        uri = uri.concat(this.hasPreviousQuery(uri) ? "?" : "&", property, "=", property === "offset" ? offset.toString() : query[property].toString());
+        uri = uri.concat(self.hasPreviousQuery(uri) ? "?" : "&", property, "=", property === "offset" ? offset.toString() : query[property].toString());
       }
     }
     return uri;
@@ -187,13 +195,14 @@ const urlify = new Urlify();
  * Implementation of SRequest for All.
  */
 export class All<T, V> implements SRequest<T, V> {
-  on(req: Request, res: Response, model: orm.Model<T, V>): void {
+  on(req: Request, res: Response, model: Model<T, V>): void {
     const limit: number = parseInt(req.query.limit || 25); // defults for 'limit'
     const offset: number = parseInt(req.query.offset || 0); // defults for 'offset'
     Observable.fromPromise(
       model.all({
         limit: limit,
-        offset: offset
+        offset: offset,
+        include: model.map || []
       })
     ).map((entities: Array<SEntity>) => objectify.on(entities))
      .map((entities: Array<SEntity>) => urlify.on(req, entities))
@@ -213,17 +222,20 @@ export class All<T, V> implements SRequest<T, V> {
 }
 /**
  * Implementation of SRequest for Detail.
+ * on orm.Model property needed to appended are;
+ *  - idKey: string
+ *  - includeModels: Array<orm.Model<?, ?>> 
  */
 export class Detail<T, V> implements SRequest<T, V> {
-  on(req: Request, res: Response, model: orm.Model<T, V>): void {
+  on(req: Request, res: Response, model: Model<T, V>): void {
     const objectId: number = parseInt(req.params.id || 0);
     if (objectId > 0) {
+      const where = toWhere(model.primaryKeyName || "id", objectId);
+      if (model.map) {
+        where["include"] = model.map;
+      }
       Observable.fromPromise(
-        model.find({
-          where: {
-            id: objectId
-          }
-        })
+        model.find(where)
       ).map((entity: SEntity) => objectify.on(entity))
        .mergeMap((entity: SEntity) => {
          if (isNullOrEmpty(entity)) {
@@ -244,7 +256,7 @@ export class Detail<T, V> implements SRequest<T, V> {
  * Implementation of SRequest for Create.
  */
 export class Create<T, V> implements SRequest<T, V> {
-  on(req: Request, res: Response, model: orm.Model<T, V>): void {
+  on(req: Request, res: Response, model: Model<T, V>): void {
     const object: V = <V> (req.body || {});
     if (!isNullOrEmpty(object)) {
       Observable.fromPromise(
@@ -263,16 +275,16 @@ export class Create<T, V> implements SRequest<T, V> {
  * Implementation of SRequest for Update.
  */
 export class Update<T, V> implements SRequest<T, V> {
-  on(req: Request, res: Response, model: orm.Model<T, V>): void {
+  on(req: Request, res: Response, model: Model<T, V>): void {
     const objectId: number = parseInt(req.params.id || 0);
     const object: V = <V> (req.body || {});
     if (objectId > 0 && !isNullOrEmpty(object)) {
+      const where = toWhere(model.primaryKeyName || "id", objectId);
+      if (model.map) {
+        where["include"] = model.map;
+      }
       Observable.fromPromise(
-        model.update(object, {
-          where: {
-            id: objectId
-          }
-        })
+        model.update(object, where)
       ).concatMap((count: Array<number>) => count)
        .map((count: number) => { return { code: 200, message: "success", data: count }; })
        .subscribe((response: SResponse<number>) => res.json(response));
@@ -285,15 +297,15 @@ export class Update<T, V> implements SRequest<T, V> {
  * Implementation of SRequest for Remove.
  */
 export class Remove<T, V> implements SRequest<T, V> {
-  on(req: Request, res: Response, model: orm.Model<T, V>): void {
+  on(req: Request, res: Response, model: Model<T, V>): void {
     const objectId: number = parseInt(req.params.id || 0);
     if (objectId > 0) {
+      const where = toWhere(model.primaryKeyName || "id", objectId);
+      if (model.map) {
+        where["include"] = model.map;
+      }
       Observable.fromPromise(
-        model.destroy({
-          where: {
-            id: objectId
-          }
-        })
+        model.destroy(where)
       ).map((count: number) => { return { code: 200, message: "success", data: count }; })
        .subscribe((response: SResponse<number>) => res.json(response));
     } else {

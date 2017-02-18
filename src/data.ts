@@ -3,6 +3,7 @@ import * as orm from "sequelize";
 import * as util from "util";
 /**
  * SEntity where server returns as object or array of objects;
+ * There are entities that defined its own dataSet so we should not use it with that
  */
 export interface SEntity {
   id?: number;
@@ -49,10 +50,23 @@ export interface SError extends Error {
   status?: number;
 }
 /**
+ * Extension for TypeScript in future content
+ * 
+ * @export
+ * @interface Model
+ * @extends {orm.Model<T, V>}
+ * @template T
+ * @template V
+ */
+export interface Model<T, V> extends orm.Model<T, V> {
+  primaryKeyName?: string;
+  map?: Array<Model<T, V>>;
+}
+/**
  * SRequest where server recieve request.
  */
 export interface SRequest<T, V> {
-  on(req: Request, res: Response, model: orm.Model<T, V>): void;
+  on(req: Request, res: Response, model: Model<T, V>): void;
 }
 /**
  * SQuery where server recieve request.

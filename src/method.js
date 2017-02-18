@@ -1,12 +1,20 @@
 "use strict";
-var Utilities = require("./data");
-var Rx = require("rxjs/Observable");
+var data_1 = require("./data");
+var Observable_1 = require("rxjs/Observable");
 require("rxjs/add/observable/fromPromise");
 require("rxjs/add/observable/empty");
 require("rxjs/add/observable/of");
 require("rxjs/add/operator/map");
 require("rxjs/add/operator/concatMap");
 require("rxjs/add/operator/mergeMap");
+/**
+ * parse key-value
+ */
+var toWhere = function (key, value) {
+    var opt = { where: {} };
+    opt.where[key] = value;
+    return opt;
+};
 /**
  * Implementation of SObject
  */
@@ -51,7 +59,7 @@ var Selectify = (function () {
     Selectify.prototype.filter = function (properties, entity) {
         var filtered = {};
         properties.forEach(function (property) { return filtered[property] = entity[property]; });
-        return Utilities.isNullOrEmpty(filtered) ? entity : filtered;
+        return data_1.isNullOrEmpty(filtered) ? entity : filtered;
     };
     return Selectify;
 }());
@@ -123,9 +131,9 @@ var Urlify = (function () {
      * create object href.
      */
     Urlify.prototype.object = function (req, data) {
-        var url = Utilities.toString("%s://%s%s", req.protocol, req.hostname, req.baseUrl);
+        var url = data_1.toString("%s://%s%s", req.protocol, req.hostname, req.baseUrl);
         var collection = req.url.split("/").map(function (d) { return d.trim(); });
-        if (!Utilities.isNullOrEmpty(req.query)) {
+        if (!data_1.isNullOrEmpty(req.query)) {
             // if url has any kind of query then we split it before we format content (index 0 was problem, it should be index 1)
             var pathCollection = collection[1].split("?").map(function (d) { return d.trim(); });
             // detail object might contain only select query for filtering on properties.      
@@ -146,12 +154,12 @@ var Urlify = (function () {
     Urlify.prototype.collection = function (req, count) {
         var self = this;
         var collectionArgs = {
-            href: Utilities.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url),
+            href: data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url),
             limit: parseInt(req.query.limit || 25),
             offset: parseInt(req.query.offset || 0),
             count: count
         };
-        var uri = Utilities.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
+        var uri = data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
         var hasNext = count >= collectionArgs.limit;
         if (hasNext) {
             collectionArgs.next = self.properties(uri, req.query, (collectionArgs.offset + collectionArgs.limit));
@@ -172,9 +180,10 @@ var Urlify = (function () {
      * read properties on query and write them again, as long as it is not `offset`
      */
     Urlify.prototype.properties = function (uri, query, offset) {
+        var self = this;
         for (var property in query) {
             if (query.hasOwnProperty(property)) {
-                uri = uri.concat(this.hasPreviousQuery(uri) ? "?" : "&", property, "=", property === "offset" ? offset.toString() : query[property].toString());
+                uri = uri.concat(self.hasPreviousQuery(uri) ? "?" : "&", property, "=", property === "offset" ? offset.toString() : query[property].toString());
             }
         }
         return uri;
@@ -198,9 +207,10 @@ var All = (function () {
     All.prototype.on = function (req, res, model) {
         var limit = parseInt(req.query.limit || 25); // defults for 'limit'
         var offset = parseInt(req.query.offset || 0); // defults for 'offset'
-        Rx.Observable.fromPromise(model.all({
+        Observable_1.Observable.fromPromise(model.all({
             limit: limit,
-            offset: offset
+            offset: offset,
+            include: model.map || []
         })).map(function (entities) { return objectify.on(entities); })
             .map(function (entities) { return urlify.on(req, entities); })
             .map(function (entities) { return selectify.on(req, entities); })
@@ -225,6 +235,9 @@ var All = (function () {
 exports.All = All;
 /**
  * Implementation of SRequest for Detail.
+ * on orm.Model property needed to appended are;
+ *  - idKey: string
+ *  - includeModels: Array<orm.Model<?, ?>>
  */
 var Detail = (function () {
     function Detail() {
@@ -232,17 +245,17 @@ var Detail = (function () {
     Detail.prototype.on = function (req, res, model) {
         var objectId = parseInt(req.params.id || 0);
         if (objectId > 0) {
-            Rx.Observable.fromPromise(model.find({
-                where: {
-                    id: objectId
-                }
-            })).map(function (entity) { return objectify.on(entity); })
+            var where = toWhere(model.primaryKeyName || "id", objectId);
+            if (model.map) {
+                where["include"] = model.map;
+            }
+            Observable_1.Observable.fromPromise(model.find(where)).map(function (entity) { return objectify.on(entity); })
                 .mergeMap(function (entity) {
-                if (Utilities.isNullOrEmpty(entity)) {
+                if (data_1.isNullOrEmpty(entity)) {
                     res.json({ code: 400, message: "no such object exists.", data: null });
-                    return Rx.Observable.empty();
+                    return Observable_1.Observable.empty();
                 }
-                return Rx.Observable.of(entity);
+                return Observable_1.Observable.of(entity);
             }).map(function (entity) { return urlify.on(req, entity); })
                 .map(function (entity) { return selectify.on(req, entity); })
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
@@ -263,8 +276,8 @@ var Create = (function () {
     }
     Create.prototype.on = function (req, res, model) {
         var object = (req.body || {});
-        if (!Utilities.isNullOrEmpty(object)) {
-            Rx.Observable.fromPromise(model.create(object)).map(function (entity) { return objectify.on(entity); })
+        if (!data_1.isNullOrEmpty(object)) {
+            Observable_1.Observable.fromPromise(model.create(object)).map(function (entity) { return objectify.on(entity); })
                 .map(function (entity) { return urlify.on(req, entity); })
                 .map(function (entity) { return selectify.on(req, entity); })
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
@@ -286,12 +299,12 @@ var Update = (function () {
     Update.prototype.on = function (req, res, model) {
         var objectId = parseInt(req.params.id || 0);
         var object = (req.body || {});
-        if (objectId > 0 && !Utilities.isNullOrEmpty(object)) {
-            Rx.Observable.fromPromise(model.update(object, {
-                where: {
-                    id: objectId
-                }
-            })).concatMap(function (count) { return count; })
+        if (objectId > 0 && !data_1.isNullOrEmpty(object)) {
+            var where = toWhere(model.primaryKeyName || "id", objectId);
+            if (model.map) {
+                where["include"] = model.map;
+            }
+            Observable_1.Observable.fromPromise(model.update(object, where)).concatMap(function (count) { return count; })
                 .map(function (count) { return { code: 200, message: "success", data: count }; })
                 .subscribe(function (response) { return res.json(response); });
         }
@@ -311,11 +324,11 @@ var Remove = (function () {
     Remove.prototype.on = function (req, res, model) {
         var objectId = parseInt(req.params.id || 0);
         if (objectId > 0) {
-            Rx.Observable.fromPromise(model.destroy({
-                where: {
-                    id: objectId
-                }
-            })).map(function (count) { return { code: 200, message: "success", data: count }; })
+            var where = toWhere(model.primaryKeyName || "id", objectId);
+            if (model.map) {
+                where["include"] = model.map;
+            }
+            Observable_1.Observable.fromPromise(model.destroy(where)).map(function (count) { return { code: 200, message: "success", data: count }; })
                 .subscribe(function (response) { return res.json(response); });
         }
         else {
