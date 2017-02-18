@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import {
   SRequest, SResponse, SObject, SQuery,
   SEntity, SSortArgs, SCollectionArgs,
-  isNullOrEmpty, toString, Model
+  isNullOrEmpty, toString, Model, SError
 } from "./data";
 import { Observable } from "rxjs/Observable";
 import * as promise from "bluebird";
@@ -321,5 +321,15 @@ export const httpMethods = {
   detail: new Detail(),
   create: new Create(),
   update: new Update(),
-  remove: new Remove()
+  remove: new Remove(),
+  error404: (req: Request, res: Response, next: NextFunction) => {
+    next({ status: 404, message: "no such url exists.", name: "NotFound." });
+  },
+  error500: (error: SError, req: Request, res: Response, next: NextFunction) => {
+    res.json({
+      code: error.status || 500,
+      message: error.name || "ServerError",
+      data: error.message || "internal server error"
+    });
+  }
 };

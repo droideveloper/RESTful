@@ -1,6 +1,6 @@
 /// <reference types="express" />
-import { Request, Response } from "express";
-import { SRequest, Model } from "./data";
+import { Request, Response, NextFunction } from "express";
+import { SRequest, Model, SError } from "./data";
 import "rxjs/add/observable/fromPromise";
 import "rxjs/add/observable/empty";
 import "rxjs/add/observable/of";
@@ -49,4 +49,6 @@ export declare const httpMethods: {
     create: Create<{}, {}>;
     update: Update<{}, {}>;
     remove: Remove<{}, {}>;
+    error404: (req: Request, res: Response, next: NextFunction) => void;
+    error500: (error: SError, req: Request, res: Response, next: NextFunction) => void;
 };

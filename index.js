@@ -19,6 +19,12 @@ var Resource = (function () {
             else {
                 server.use(Resource.route(option));
             }
+            server.use(function (req, res, next) {
+                method_1.httpMethods.error404(req, res, next);
+            });
+            server.use(function (error, req, res, next) {
+                method_1.httpMethods.error500(error, req, res, next);
+            });
         });
     };
     /**

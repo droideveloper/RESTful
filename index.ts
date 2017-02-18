@@ -1,6 +1,6 @@
 import * as express from "express";
 import { Request, Response, Router, NextFunction, Express } from "express";
-import { toString, Model } from "./src/data";
+import { toString, Model, SError } from "./src/data";
 import { httpMethods } from "./src/method";
 /**
  * Resource Options with model and methods to bind
@@ -23,6 +23,12 @@ export class Resource {
       } else {
         server.use(Resource.route(option));
       }
+      server.use((req: Request, res: Response, next: NextFunction) => {
+        httpMethods.error404(req, res, next);
+      });
+      server.use((error: SError, req: Request, res: Response, next: NextFunction) => {
+        httpMethods.error500(error, req, res, next);
+      });
     });
   }
   /**

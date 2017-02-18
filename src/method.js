@@ -346,5 +346,15 @@ exports.httpMethods = {
     detail: new Detail(),
     create: new Create(),
     update: new Update(),
-    remove: new Remove()
+    remove: new Remove(),
+    error404: function (req, res, next) {
+        next({ status: 404, message: "no such url exists.", name: "NotFound." });
+    },
+    error500: function (error, req, res, next) {
+        res.json({
+            code: error.status || 500,
+            message: error.name || "ServerError",
+            data: error.message || "internal server error"
+        });
+    }
 };
