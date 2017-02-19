@@ -155,6 +155,10 @@ server.listen(port, host, () => {
 });
 ```
 
+## Changes ##
+- Error callback for Sequelize failure with detailed content of error.
+- 404-500 error callback for Express with fair information.
+
 ## License ##
 
 Copyright 2017 Fatih Şen and contributors.
