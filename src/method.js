@@ -5,6 +5,7 @@ require("rxjs/add/observable/fromPromise");
 require("rxjs/add/observable/empty");
 require("rxjs/add/observable/of");
 require("rxjs/add/operator/map");
+require("rxjs/add/operator/timeout");
 require("rxjs/add/operator/concatMap");
 require("rxjs/add/operator/mergeMap");
 /**
@@ -211,6 +212,12 @@ var All = (function () {
             limit: limit,
             offset: offset,
             include: model.map || []
+        }).catch(function (error) {
+            res.json({
+                status: 400,
+                message: error.name || "database error",
+                data: error.message || "error occured in database transaction"
+            });
         })).map(function (entities) { return objectify.on(entities); })
             .map(function (entities) { return urlify.on(req, entities); })
             .map(function (entities) { return selectify.on(req, entities); })
@@ -228,7 +235,8 @@ var All = (function () {
             response.limit = args.limit;
             response.offset = args.offset;
             return response;
-        }).subscribe(function (response) { return res.json(response); });
+        }).timeout(200)
+            .subscribe(function (response) { return res.json(response); }, function (error) { throw { status: 400, message: error.message, name: error.name }; });
     };
     return All;
 }());
@@ -249,7 +257,14 @@ var Detail = (function () {
             if (model.map) {
                 where["include"] = model.map;
             }
-            Observable_1.Observable.fromPromise(model.find(where)).map(function (entity) { return objectify.on(entity); })
+            Observable_1.Observable.fromPromise(model.find(where)
+                .catch(function (error) {
+                res.json({
+                    status: 400,
+                    message: error.name || "database error",
+                    data: error.message || "error occured in database transaction"
+                });
+            })).map(function (entity) { return objectify.on(entity); })
                 .mergeMap(function (entity) {
                 if (data_1.isNullOrEmpty(entity)) {
                     res.json({ code: 400, message: "no such object exists.", data: null });
@@ -259,7 +274,8 @@ var Detail = (function () {
             }).map(function (entity) { return urlify.on(req, entity); })
                 .map(function (entity) { return selectify.on(req, entity); })
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
-                .subscribe(function (response) { return res.json(response); });
+                .timeout(200)
+                .subscribe(function (response) { return res.json(response); }, function (error) { throw { status: 400, message: error.message, name: error.name }; });
         }
         else {
             throw { status: 400, message: "invalid object id, check param id.", name: "InvalidObjectId" };
@@ -277,11 +293,19 @@ var Create = (function () {
     Create.prototype.on = function (req, res, model) {
         var object = (req.body || {});
         if (!data_1.isNullOrEmpty(object)) {
-            Observable_1.Observable.fromPromise(model.create(object)).map(function (entity) { return objectify.on(entity); })
+            Observable_1.Observable.fromPromise(model.create(object)
+                .catch(function (error) {
+                res.json({
+                    status: 400,
+                    message: error.name || "database error",
+                    data: error.message || "error occured in database transaction"
+                });
+            })).map(function (entity) { return objectify.on(entity); })
                 .map(function (entity) { return urlify.on(req, entity); })
                 .map(function (entity) { return selectify.on(req, entity); })
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
-                .subscribe(function (response) { return res.json(response); });
+                .timeout(200)
+                .subscribe(function (response) { return res.json(response); }, function (error) { throw { status: 400, message: error.message, name: error.name }; });
         }
         else {
             throw { status: 400, message: "invalid object", name: "InvalidObject" };
@@ -304,9 +328,17 @@ var Update = (function () {
             if (model.map) {
                 where["include"] = model.map;
             }
-            Observable_1.Observable.fromPromise(model.update(object, where)).concatMap(function (count) { return count; })
+            Observable_1.Observable.fromPromise(model.update(object, where)
+                .catch(function (error) {
+                res.json({
+                    status: 400,
+                    message: error.name || "database error",
+                    data: error.message || "error occured in database transaction"
+                });
+            })).concatMap(function (count) { return count; })
                 .map(function (count) { return { code: 200, message: "success", data: count }; })
-                .subscribe(function (response) { return res.json(response); });
+                .timeout(200)
+                .subscribe(function (response) { return res.json(response); }, function (error) { throw { status: 400, message: error.message, name: error.name }; });
         }
         else {
             throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };
@@ -328,8 +360,16 @@ var Remove = (function () {
             if (model.map) {
                 where["include"] = model.map;
             }
-            Observable_1.Observable.fromPromise(model.destroy(where)).map(function (count) { return { code: 200, message: "success", data: count }; })
-                .subscribe(function (response) { return res.json(response); });
+            Observable_1.Observable.fromPromise(model.destroy(where)
+                .catch(function (error) {
+                res.json({
+                    status: 400,
+                    message: error.name || "database error",
+                    data: error.message || "error occured in database transaction"
+                });
+            })).map(function (count) { return { code: 200, message: "success", data: count }; })
+                .timeout(200)
+                .subscribe(function (response) { return res.json(response); }, function (error) { throw { status: 400, message: error.message, name: error.name }; });
         }
         else {
             throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };

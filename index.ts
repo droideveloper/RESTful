@@ -23,12 +23,12 @@ export class Resource {
       } else {
         server.use(Resource.route(option));
       }
-      server.use((req: Request, res: Response, next: NextFunction) => {
-        httpMethods.error404(req, res, next);
-      });
-      server.use((error: SError, req: Request, res: Response, next: NextFunction) => {
-        httpMethods.error500(error, req, res, next);
-      });
+    });
+    server.use((req: Request, res: Response, next: NextFunction) => {
+      httpMethods.error404(req, res, next);
+    });
+    server.use((error: SError, req: Request, res: Response, next: NextFunction) => {
+      httpMethods.error500(error, req, res, next);
     });
   }
   /**

@@ -10,6 +10,7 @@ import "rxjs/add/observable/fromPromise";
 import "rxjs/add/observable/empty";
 import "rxjs/add/observable/of";
 import "rxjs/add/operator/map";
+import "rxjs/add/operator/timeout";
 import "rxjs/add/operator/concatMap";
 import "rxjs/add/operator/mergeMap";
 /**
@@ -203,7 +204,13 @@ export class All<T, V> implements SRequest<T, V> {
         limit: limit,
         offset: offset,
         include: model.map || []
-      })
+      }).catch(error => {
+          res.json({
+            status: 400,
+            message: error.name || "database error",
+            data: error.message || "error occured in database transaction"
+          });
+        })
     ).map((entities: Array<SEntity>) => objectify.on(entities))
      .map((entities: Array<SEntity>) => urlify.on(req, entities))
      .map((entities: Array<SEntity>) => selectify.on(req, entities))
@@ -217,7 +224,9 @@ export class All<T, V> implements SRequest<T, V> {
        response.limit = args.limit;
        response.offset = args.offset;
        return response;
-     }).subscribe((response: SResponse<SEntity>) => res.json(response));
+     }).timeout(200)
+     .subscribe((response: SResponse<SEntity>) => res.json(response),
+       error => { throw { status: 400, message: error.message, name: error.name }; });
   }
 }
 /**
@@ -236,6 +245,13 @@ export class Detail<T, V> implements SRequest<T, V> {
       }
       Observable.fromPromise(
         model.find(where)
+          .catch(error => {
+            res.json({
+              status: 400,
+              message: error.name || "database error",
+              data: error.message || "error occured in database transaction"
+            });
+          })
       ).map((entity: SEntity) => objectify.on(entity))
        .mergeMap((entity: SEntity) => {
          if (isNullOrEmpty(entity)) {
@@ -246,7 +262,9 @@ export class Detail<T, V> implements SRequest<T, V> {
        }).map((entity: SEntity) => urlify.on(req, entity))
        .map((entity: SEntity) => selectify.on(req, entity))
        .map((entity: SEntity) => { return { code: 200, message: "success", data: entity }; })
-       .subscribe((response: SResponse<SEntity>) => res.json(response));
+       .timeout(200)
+       .subscribe((response: SResponse<SEntity>) => res.json(response),
+       error => { throw { status: 400, message: error.message, name: error.name }; });
     } else {
       throw { status: 400, message: "invalid object id, check param id.", name: "InvalidObjectId" };
     }
@@ -261,11 +279,20 @@ export class Create<T, V> implements SRequest<T, V> {
     if (!isNullOrEmpty(object)) {
       Observable.fromPromise(
         model.create(object)
+          .catch(error => {
+            res.json({
+              status: 400,
+              message: error.name || "database error",
+              data: error.message || "error occured in database transaction"
+            });
+          })
       ).map((entity: SEntity) => objectify.on(entity))
        .map((entity: SEntity) => urlify.on(req, entity))
        .map((entity: SEntity) => selectify.on(req, entity))
        .map((entity: SEntity) => { return { code: 200, message: "success", data: entity }; })
-       .subscribe((response: SResponse<SEntity>) => res.json(response));
+       .timeout(200)
+       .subscribe((response: SResponse<SEntity>) => res.json(response),
+       error => { throw { status: 400, message: error.message, name: error.name }; });
     } else {
       throw { status: 400, message: "invalid object", name: "InvalidObject" };
     }
@@ -285,9 +312,18 @@ export class Update<T, V> implements SRequest<T, V> {
       }
       Observable.fromPromise(
         model.update(object, where)
+          .catch(error => {
+            res.json({
+              status: 400,
+              message: error.name || "database error",
+              data: error.message || "error occured in database transaction"
+            });
+          })
       ).concatMap((count: Array<number>) => count)
        .map((count: number) => { return { code: 200, message: "success", data: count }; })
-       .subscribe((response: SResponse<number>) => res.json(response));
+       .timeout(200)
+       .subscribe((response: SResponse<number>) => res.json(response),
+       error => { throw { status: 400, message: error.message, name: error.name }; });
     } else {
       throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };
     }
@@ -306,8 +342,17 @@ export class Remove<T, V> implements SRequest<T, V> {
       }
       Observable.fromPromise(
         model.destroy(where)
+          .catch(error => {
+            res.json({
+              status: 400,
+              message: error.name || "database error",
+              data: error.message || "error occured in database transaction"
+            });
+          })
       ).map((count: number) => { return { code: 200, message: "success", data: count }; })
-       .subscribe((response: SResponse<number>) => res.json(response));
+       .timeout(200)
+       .subscribe((response: SResponse<number>) => res.json(response),
+       error => { throw { status: 400, message: error.message, name: error.name }; });
     } else {
       throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };
     }
