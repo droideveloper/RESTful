@@ -92,18 +92,13 @@ server.use(bodyParser.urlencoded({ extended: true }));
 server.use(gzip({ filter: function (req, res) {
   return !req.headers["x-no-gzip"];
 }}));
-// sync ORM context
-if (dbContext.sequelize) {
-  dbContext.sequelize.sync();
-}
+
 // get items from models
 var models = [];
 for (var property in dbContext) {
- if (property !== "sequelize" && property !== "Sequelize") {
-   // register as options you can add { model: xxx, methods: ["get", "post"] } 
-   // methods are (optional) defaults all registered ["get", "post", "put", "delete"] 
-    models.push({ model: dbContext[property] });
-  }
+  // register as options you can add { model: xxx, methods: ["get", "post"] } 
+  // methods are (optional) defaults all registered ["get", "post", "put", "delete"] 
+  models.push({ model: dbContext[property] });  
 }
 // finally register your method(s) on base as '/v1/endpoint'
 // base is (optional) context.Resource.register(server, model)
