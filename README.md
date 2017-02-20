@@ -69,6 +69,8 @@ Documentation for `express` or `sequelize`
 
 ### How to use ###
 
+(PS: for database example check [model](https://github.com/droideveloper/RESTful#models))
+
 if you prefer javascript then in your server.js or index.js file;
 
 ```javascript
@@ -148,6 +150,83 @@ Resource.register(server, models, "/v1/endpoint");
 server.listen(port, host, () => {
   console.log("Server Running...");
 });
+```
+### Models ###
+
+in `/model` folder 
+
+as Country.js 
+
+```javascript
+'use strict';
+module.exports = function(sequelize, DataTypes) {
+  var Country = sequelize.define('Country', {
+    countryName: { type: DataTypes.STRING, allowNull: false }
+  }, {
+    classMethods: {
+      associate: function(models) {
+        Country.hasMany(models.City);
+        // Country.map is for api will show assosiations
+        Country.map = [models.City];
+      }
+    }
+  });
+  return Country;
+};
+```
+
+as City.js 
+
+```javascript
+'use strict';
+module.exports = function(sequelize, DataTypes) {
+  var City = sequelize.define('City', {
+    cityName: { type: DataTypes.STRING, allowNull: false }
+  }, {
+    classMethods: {
+      associate: function(models) {
+        City.belongsTo(models.Country, { as: "countryId" });
+      }
+    }
+  });
+  return City;
+};
+```
+
+as index.js 
+
+```javascript
+'use strict';
+var fs        = require('fs');
+var path      = require('path');
+var Sequelize = require('sequelize');
+var basename  = path.basename(module.filename);
+var config    = require(path.join(__dirname, '../config/config.json'));
+// placeholder for all
+var dbContext = {};
+// connect
+var sequelize = new Sequelize(config.database, config.username, config.password, config.options);
+// imports everything in this directory into entities and register relations later.
+fs.readdirSync(__dirname)
+  .filter(function(f) {
+    return (f.indexOf('.') !== 0) && (f !== basename) && (f.slice(-3) === '.js');
+  })
+  .forEach(function(f) {
+    var model = sequelize.import(path.join(__dirname, f));
+    dbContext[model.name] = model;  
+  });
+// invoke associate methods on models
+Object.keys(dbContext)
+  .forEach(function(key) {
+    if(dbContext[key].associate) {
+      // this will invoke our relationships
+      dbContext[key]associate(dbContext);
+    }
+  });
+// sync context once
+sequelize.sync();
+// exports
+module.exports = dbContext;
 ```
 
 ## Changes ##
