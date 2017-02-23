@@ -236,7 +236,13 @@ var All = (function () {
             response.offset = args.offset;
             return response;
         }).timeout(200)
-            .subscribe(function (response) { return res.json(response); }, function (error) { throw { status: 400, message: error.message, name: error.name }; });
+            .subscribe(function (response) { return res.json(response); }, function (error) {
+            res.json({
+                status: 400,
+                message: error.name || "database error",
+                data: error.message || "error occured in database transaction"
+            });
+        });
     };
     return All;
 }());
@@ -275,7 +281,13 @@ var Detail = (function () {
                 .map(function (entity) { return selectify.on(req, entity); })
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
                 .timeout(200)
-                .subscribe(function (response) { return res.json(response); }, function (error) { throw { status: 400, message: error.message, name: error.name }; });
+                .subscribe(function (response) { return res.json(response); }, function (error) {
+                res.json({
+                    status: 400,
+                    message: error.name || "database error",
+                    data: error.message || "error occured in database transaction"
+                });
+            });
         }
         else {
             throw { status: 400, message: "invalid object id, check param id.", name: "InvalidObjectId" };
@@ -305,7 +317,13 @@ var Create = (function () {
                 .map(function (entity) { return selectify.on(req, entity); })
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
                 .timeout(200)
-                .subscribe(function (response) { return res.json(response); }, function (error) { throw { status: 400, message: error.message, name: error.name }; });
+                .subscribe(function (response) { return res.json(response); }, function (error) {
+                res.json({
+                    status: 400,
+                    message: error.name || "database error",
+                    data: error.message || "error occured in database transaction"
+                });
+            });
         }
         else {
             throw { status: 400, message: "invalid object", name: "InvalidObject" };
@@ -338,7 +356,13 @@ var Update = (function () {
             })).concatMap(function (count) { return count; })
                 .map(function (count) { return { code: 200, message: "success", data: count }; })
                 .timeout(200)
-                .subscribe(function (response) { return res.json(response); }, function (error) { throw { status: 400, message: error.message, name: error.name }; });
+                .subscribe(function (response) { return res.json(response); }, function (error) {
+                res.json({
+                    status: 400,
+                    message: error.name || "database error",
+                    data: error.message || "error occured in database transaction"
+                });
+            });
         }
         else {
             throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };
@@ -369,7 +393,13 @@ var Remove = (function () {
                 });
             })).map(function (count) { return { code: 200, message: "success", data: count }; })
                 .timeout(200)
-                .subscribe(function (response) { return res.json(response); }, function (error) { throw { status: 400, message: error.message, name: error.name }; });
+                .subscribe(function (response) { return res.json(response); }, function (error) {
+                res.json({
+                    status: 400,
+                    message: error.name || "database error",
+                    data: error.message || "error occured in database transaction"
+                });
+            });
         }
         else {
             throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };
