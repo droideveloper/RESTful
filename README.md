@@ -165,7 +165,7 @@ module.exports = function(sequelize, DataTypes) {
   }, {
     classMethods: {
       associate: function(models) {
-        Country.hasMany(models.City);
+        Country.hasMany(models.City, { foreignKey: "countryId" });
         // Country.map is for api will show assosiations
         Country.map = [models.City];
       }
@@ -185,7 +185,7 @@ module.exports = function(sequelize, DataTypes) {
   }, {
     classMethods: {
       associate: function(models) {
-        City.belongsTo(models.Country, { as: "countryId" });
+        City.belongsTo(models.Country, { as: "country" });
       }
     }
   });
