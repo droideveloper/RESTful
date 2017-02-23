@@ -206,6 +206,7 @@ var All = (function () {
     function All() {
     }
     All.prototype.on = function (req, res, model) {
+        var served = false;
         var limit = parseInt(req.query.limit || 25); // defults for 'limit'
         var offset = parseInt(req.query.offset || 0); // defults for 'offset'
         Observable_1.Observable.fromPromise(model.all({
@@ -213,6 +214,7 @@ var All = (function () {
             offset: offset,
             include: model.map || []
         }).catch(function (error) {
+            served = true;
             res.json({
                 status: 400,
                 message: error.name || "database error",
@@ -237,11 +239,13 @@ var All = (function () {
             return response;
         }).timeout(200)
             .subscribe(function (response) { return res.json(response); }, function (error) {
-            res.json({
-                status: 400,
-                message: error.name || "database error",
-                data: error.message || "error occured in database transaction"
-            });
+            if (!served) {
+                res.json({
+                    status: 400,
+                    message: error.name || "database error",
+                    data: error.message || "error occured in database transaction"
+                });
+            }
         });
     };
     return All;
@@ -257,6 +261,7 @@ var Detail = (function () {
     function Detail() {
     }
     Detail.prototype.on = function (req, res, model) {
+        var served = false;
         var objectId = parseInt(req.params.id || 0);
         if (objectId > 0) {
             var where = toWhere(model.primaryKeyName || "id", objectId);
@@ -265,6 +270,7 @@ var Detail = (function () {
             }
             Observable_1.Observable.fromPromise(model.find(where)
                 .catch(function (error) {
+                served = true;
                 res.json({
                     status: 400,
                     message: error.name || "database error",
@@ -282,11 +288,13 @@ var Detail = (function () {
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
                 .timeout(200)
                 .subscribe(function (response) { return res.json(response); }, function (error) {
-                res.json({
-                    status: 400,
-                    message: error.name || "database error",
-                    data: error.message || "error occured in database transaction"
-                });
+                if (!served) {
+                    res.json({
+                        status: 400,
+                        message: error.name || "database error",
+                        data: error.message || "error occured in database transaction"
+                    });
+                }
             });
         }
         else {
@@ -303,10 +311,12 @@ var Create = (function () {
     function Create() {
     }
     Create.prototype.on = function (req, res, model) {
+        var served = false;
         var object = (req.body || {});
         if (!data_1.isNullOrEmpty(object)) {
             Observable_1.Observable.fromPromise(model.create(object)
                 .catch(function (error) {
+                served = true;
                 res.json({
                     status: 400,
                     message: error.name || "database error",
@@ -318,11 +328,13 @@ var Create = (function () {
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
                 .timeout(200)
                 .subscribe(function (response) { return res.json(response); }, function (error) {
-                res.json({
-                    status: 400,
-                    message: error.name || "database error",
-                    data: error.message || "error occured in database transaction"
-                });
+                if (!served) {
+                    res.json({
+                        status: 400,
+                        message: error.name || "database error",
+                        data: error.message || "error occured in database transaction"
+                    });
+                }
             });
         }
         else {
@@ -339,6 +351,7 @@ var Update = (function () {
     function Update() {
     }
     Update.prototype.on = function (req, res, model) {
+        var served = false;
         var objectId = parseInt(req.params.id || 0);
         var object = (req.body || {});
         if (objectId > 0 && !data_1.isNullOrEmpty(object)) {
@@ -348,6 +361,7 @@ var Update = (function () {
             }
             Observable_1.Observable.fromPromise(model.update(object, where)
                 .catch(function (error) {
+                served = true;
                 res.json({
                     status: 400,
                     message: error.name || "database error",
@@ -357,11 +371,13 @@ var Update = (function () {
                 .map(function (count) { return { code: 200, message: "success", data: count }; })
                 .timeout(200)
                 .subscribe(function (response) { return res.json(response); }, function (error) {
-                res.json({
-                    status: 400,
-                    message: error.name || "database error",
-                    data: error.message || "error occured in database transaction"
-                });
+                if (!served) {
+                    res.json({
+                        status: 400,
+                        message: error.name || "database error",
+                        data: error.message || "error occured in database transaction"
+                    });
+                }
             });
         }
         else {
@@ -378,6 +394,7 @@ var Remove = (function () {
     function Remove() {
     }
     Remove.prototype.on = function (req, res, model) {
+        var served = false;
         var objectId = parseInt(req.params.id || 0);
         if (objectId > 0) {
             var where = toWhere(model.primaryKeyName || "id", objectId);
@@ -386,6 +403,7 @@ var Remove = (function () {
             }
             Observable_1.Observable.fromPromise(model.destroy(where)
                 .catch(function (error) {
+                served = true;
                 res.json({
                     status: 400,
                     message: error.name || "database error",
@@ -394,11 +412,13 @@ var Remove = (function () {
             })).map(function (count) { return { code: 200, message: "success", data: count }; })
                 .timeout(200)
                 .subscribe(function (response) { return res.json(response); }, function (error) {
-                res.json({
-                    status: 400,
-                    message: error.name || "database error",
-                    data: error.message || "error occured in database transaction"
-                });
+                if (!served) {
+                    res.json({
+                        status: 400,
+                        message: error.name || "database error",
+                        data: error.message || "error occured in database transaction"
+                    });
+                }
             });
         }
         else {

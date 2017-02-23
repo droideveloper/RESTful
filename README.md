@@ -232,6 +232,7 @@ module.exports = dbContext;
 ## Changes ##
 - Error callback for Sequelize failure with detailed content of error.
 - 404-500 error callback for Express with fair information.
+- bug fix.
 
 ## License ##
 

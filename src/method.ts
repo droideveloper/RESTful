@@ -197,6 +197,7 @@ const urlify = new Urlify();
  */
 export class All<T, V> implements SRequest<T, V> {
   on(req: Request, res: Response, model: Model<T, V>): void {
+    let served: Boolean = false;
     const limit: number = parseInt(req.query.limit || 25); // defults for 'limit'
     const offset: number = parseInt(req.query.offset || 0); // defults for 'offset'
     Observable.fromPromise(
@@ -205,6 +206,7 @@ export class All<T, V> implements SRequest<T, V> {
         offset: offset,
         include: model.map || []
       }).catch(error => {
+          served = true;
           res.json({
             status: 400,
             message: error.name || "database error",
@@ -226,12 +228,14 @@ export class All<T, V> implements SRequest<T, V> {
        return response;
      }).timeout(200)
      .subscribe((response: SResponse<SEntity>) => res.json(response),
-       error => { 
-         res.json({
-            status: 400,
-            message: error.name || "database error",
-            data: error.message || "error occured in database transaction"
-          });
+       error => {
+         if (!served) {
+           res.json({
+              status: 400,
+              message: error.name || "database error",
+              data: error.message || "error occured in database transaction"
+            });
+         }
       });
   }
 }
@@ -243,6 +247,7 @@ export class All<T, V> implements SRequest<T, V> {
  */
 export class Detail<T, V> implements SRequest<T, V> {
   on(req: Request, res: Response, model: Model<T, V>): void {
+    let served: Boolean = false;
     const objectId: number = parseInt(req.params.id || 0);
     if (objectId > 0) {
       const where = toWhere(model.primaryKeyName || "id", objectId);
@@ -252,6 +257,7 @@ export class Detail<T, V> implements SRequest<T, V> {
       Observable.fromPromise(
         model.find(where)
           .catch(error => {
+            served = true;
             res.json({
               status: 400,
               message: error.name || "database error",
@@ -270,12 +276,14 @@ export class Detail<T, V> implements SRequest<T, V> {
        .map((entity: SEntity) => { return { code: 200, message: "success", data: entity }; })
        .timeout(200)
        .subscribe((response: SResponse<SEntity>) => res.json(response),
-       error => { 
-         res.json({
-            status: 400,
-            message: error.name || "database error",
-            data: error.message || "error occured in database transaction"
-          });
+       error => {
+         if (!served) {
+           res.json({
+              status: 400,
+              message: error.name || "database error",
+              data: error.message || "error occured in database transaction"
+            });
+         }
       });
     } else {
       throw { status: 400, message: "invalid object id, check param id.", name: "InvalidObjectId" };
@@ -287,11 +295,13 @@ export class Detail<T, V> implements SRequest<T, V> {
  */
 export class Create<T, V> implements SRequest<T, V> {
   on(req: Request, res: Response, model: Model<T, V>): void {
+    let served: Boolean = false;
     const object: V = <V> (req.body || {});
     if (!isNullOrEmpty(object)) {
       Observable.fromPromise(
         model.create(object)
           .catch(error => {
+            served = true;
             res.json({
               status: 400,
               message: error.name || "database error",
@@ -304,12 +314,14 @@ export class Create<T, V> implements SRequest<T, V> {
        .map((entity: SEntity) => { return { code: 200, message: "success", data: entity }; })
        .timeout(200)
        .subscribe((response: SResponse<SEntity>) => res.json(response),
-       error => { 
-         res.json({
-            status: 400,
-            message: error.name || "database error",
-            data: error.message || "error occured in database transaction"
-          });
+       error => {
+         if (!served) {
+           res.json({
+              status: 400,
+              message: error.name || "database error",
+              data: error.message || "error occured in database transaction"
+            });
+         }
       });
     } else {
       throw { status: 400, message: "invalid object", name: "InvalidObject" };
@@ -321,6 +333,7 @@ export class Create<T, V> implements SRequest<T, V> {
  */
 export class Update<T, V> implements SRequest<T, V> {
   on(req: Request, res: Response, model: Model<T, V>): void {
+    let served: Boolean = false;
     const objectId: number = parseInt(req.params.id || 0);
     const object: V = <V> (req.body || {});
     if (objectId > 0 && !isNullOrEmpty(object)) {
@@ -331,6 +344,7 @@ export class Update<T, V> implements SRequest<T, V> {
       Observable.fromPromise(
         model.update(object, where)
           .catch(error => {
+            served = true;
             res.json({
               status: 400,
               message: error.name || "database error",
@@ -341,12 +355,14 @@ export class Update<T, V> implements SRequest<T, V> {
        .map((count: number) => { return { code: 200, message: "success", data: count }; })
        .timeout(200)
        .subscribe((response: SResponse<number>) => res.json(response),
-       error => { 
-         res.json({
-            status: 400,
-            message: error.name || "database error",
-            data: error.message || "error occured in database transaction"
-          });
+       error => {
+         if (!served) {
+           res.json({
+              status: 400,
+              message: error.name || "database error",
+              data: error.message || "error occured in database transaction"
+            });
+         }
       });
     } else {
       throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };
@@ -358,6 +374,7 @@ export class Update<T, V> implements SRequest<T, V> {
  */
 export class Remove<T, V> implements SRequest<T, V> {
   on(req: Request, res: Response, model: Model<T, V>): void {
+    let served: Boolean = false;
     const objectId: number = parseInt(req.params.id || 0);
     if (objectId > 0) {
       const where = toWhere(model.primaryKeyName || "id", objectId);
@@ -367,6 +384,7 @@ export class Remove<T, V> implements SRequest<T, V> {
       Observable.fromPromise(
         model.destroy(where)
           .catch(error => {
+            served = true;
             res.json({
               status: 400,
               message: error.name || "database error",
@@ -377,11 +395,13 @@ export class Remove<T, V> implements SRequest<T, V> {
        .timeout(200)
        .subscribe((response: SResponse<number>) => res.json(response),
        error => {
-         res.json({
-            status: 400,
-            message: error.name || "database error",
-            data: error.message || "error occured in database transaction"
-          });
+         if (!served) {
+           res.json({
+              status: 400,
+              message: error.name || "database error",
+              data: error.message || "error occured in database transaction"
+            });
+         }
       });
     } else {
       throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };
