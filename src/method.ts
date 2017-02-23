@@ -226,7 +226,13 @@ export class All<T, V> implements SRequest<T, V> {
        return response;
      }).timeout(200)
      .subscribe((response: SResponse<SEntity>) => res.json(response),
-       error => { throw { status: 400, message: error.message, name: error.name }; });
+       error => { 
+         res.json({
+            status: 400,
+            message: error.name || "database error",
+            data: error.message || "error occured in database transaction"
+          });
+      });
   }
 }
 /**
@@ -264,7 +270,13 @@ export class Detail<T, V> implements SRequest<T, V> {
        .map((entity: SEntity) => { return { code: 200, message: "success", data: entity }; })
        .timeout(200)
        .subscribe((response: SResponse<SEntity>) => res.json(response),
-       error => { throw { status: 400, message: error.message, name: error.name }; });
+       error => { 
+         res.json({
+            status: 400,
+            message: error.name || "database error",
+            data: error.message || "error occured in database transaction"
+          });
+      });
     } else {
       throw { status: 400, message: "invalid object id, check param id.", name: "InvalidObjectId" };
     }
@@ -292,7 +304,13 @@ export class Create<T, V> implements SRequest<T, V> {
        .map((entity: SEntity) => { return { code: 200, message: "success", data: entity }; })
        .timeout(200)
        .subscribe((response: SResponse<SEntity>) => res.json(response),
-       error => { throw { status: 400, message: error.message, name: error.name }; });
+       error => { 
+         res.json({
+            status: 400,
+            message: error.name || "database error",
+            data: error.message || "error occured in database transaction"
+          });
+      });
     } else {
       throw { status: 400, message: "invalid object", name: "InvalidObject" };
     }
@@ -323,7 +341,13 @@ export class Update<T, V> implements SRequest<T, V> {
        .map((count: number) => { return { code: 200, message: "success", data: count }; })
        .timeout(200)
        .subscribe((response: SResponse<number>) => res.json(response),
-       error => { throw { status: 400, message: error.message, name: error.name }; });
+       error => { 
+         res.json({
+            status: 400,
+            message: error.name || "database error",
+            data: error.message || "error occured in database transaction"
+          });
+      });
     } else {
       throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };
     }
@@ -352,7 +376,13 @@ export class Remove<T, V> implements SRequest<T, V> {
       ).map((count: number) => { return { code: 200, message: "success", data: count }; })
        .timeout(200)
        .subscribe((response: SResponse<number>) => res.json(response),
-       error => { throw { status: 400, message: error.message, name: error.name }; });
+       error => {
+         res.json({
+            status: 400,
+            message: error.name || "database error",
+            data: error.message || "error occured in database transaction"
+          });
+      });
     } else {
       throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };
     }
