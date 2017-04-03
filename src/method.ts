@@ -160,12 +160,12 @@ class Urlify<T extends SEntity> implements SQuery<T> {
     let uri: string;
     if (xport !== 80) {
       collectionArgs = {
-        href: toString("%s://%s%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, req.url),
+        href: toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, req.url),
         limit: parseInt(req.query.limit || 25),
         offset: parseInt(req.query.offset || 0),
         count: count
       };
-      uri = toString("%s://%s%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, (req.url.split("?")[0] || req.url));
+      uri = toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, (req.url.split("?")[0] || req.url));
     } else {
       collectionArgs = {
         href: toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url),
