@@ -15,9 +15,9 @@ export declare class Resource {
     /**
      * Register as array or single
      */
-    static register<T, V>(server: Express, options: Array<ResourceOption<T, V>>, base?: string): void;
+    static register<T, V>(server: Express, options: Array<ResourceOption<T, V>>, base?: string, port?: Number): void;
     /**
      * create route from option
      */
-    static route<T, V>(option: ResourceOption<T, V>): Router;
+    static route<T, V>(option: ResourceOption<T, V>, port?: Number): Router;
 }

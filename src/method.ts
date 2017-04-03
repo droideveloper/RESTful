@@ -74,11 +74,12 @@ class Sortify<T extends SEntity> implements SQuery<T> {
     const sortArgs: SSortArgs = self.sorts(req);
     if (sortArgs.property) {
       const filter = (l: T, r: T): number => {
-        if (typeof l[sortArgs.property] === "string") {
+        const t: string = typeof l[sortArgs.property];
+        if (t === "string") {
           return (<string> l[sortArgs.property]).localeCompare((<string> r[sortArgs.property]));
-        } else if (typeof l[sortArgs.property] === "number") {
+        } else if (t === "number") {
           return (<number> l[sortArgs.property]) - (<number> r[sortArgs.property]);
-        } else if (typeof l[sortArgs.property] === "Date") {
+        } else if (t === "Date") {
           return (<Date> l[sortArgs.property]).getTime() - (<Date> r[sortArgs.property]).getTime();
         } return 0;
       };
@@ -126,7 +127,13 @@ class Urlify<T extends SEntity> implements SQuery<T> {
    * create object href.
    */
   object(req: Request, data: T): string {
-    const url: string = toString("%s://%s%s", req.protocol, req.hostname, req.baseUrl);
+    const xport: Number = (req["xport"] || 80);
+    let url: string;
+    if (xport !== 80) {
+      url = toString("%s://%s:%d%s", req.protocol, req.hostname, xport, req.baseUrl);
+    } else {
+      url = toString("%s://%s%s", req.protocol, req.hostname, req.baseUrl);
+    }
     const collection: Array<string> = req.url.split("/").map(d => d.trim());
     if (!isNullOrEmpty(req.query)) {
       // if url has any kind of query then we split it before we format content (index 0 was problem, it should be index 1)
@@ -147,14 +154,27 @@ class Urlify<T extends SEntity> implements SQuery<T> {
    * create collection of object href.
    */
   collection(req: Request, count: number): SCollectionArgs {
+    const xport: Number = (req["xport"] || 80);
     const self = this;
-    const collectionArgs: SCollectionArgs = {
-      href: toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url),
-      limit: parseInt(req.query.limit || 25),
-      offset: parseInt(req.query.offset || 0),
-      count: count
-    };
-    const uri = toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
+    let collectionArgs: SCollectionArgs;
+    let uri: string;
+    if (xport !== 80) {
+      collectionArgs = {
+        href: toString("%s://%s%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, req.url),
+        limit: parseInt(req.query.limit || 25),
+        offset: parseInt(req.query.offset || 0),
+        count: count
+      };
+      uri = toString("%s://%s%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, (req.url.split("?")[0] || req.url));
+    } else {
+      collectionArgs = {
+        href: toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url),
+        limit: parseInt(req.query.limit || 25),
+        offset: parseInt(req.query.offset || 0),
+        count: count
+      };
+      uri = toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
+    }
     const hasNext = count >= collectionArgs.limit;
     if (hasNext) {
       collectionArgs.next = self.properties(uri, req.query, (collectionArgs.offset + collectionArgs.limit));

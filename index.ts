@@ -16,12 +16,20 @@ export class Resource {
   /**
    * Register as array or single
    */
-  public static register<T, V>(server: Express, options: Array<ResourceOption<T, V>>, base?: string): void {
+  public static register<T, V>(server: Express, options: Array<ResourceOption<T, V>>, base?: string, port?: Number): void {
     options.forEach((option: ResourceOption<T, V>): void => {
       if (base) {
-        server.use(base, Resource.route(option));
+        if (port) {
+          server.use(base, Resource.route(option, port));
+        } else {
+          server.use(base, Resource.route(option));
+        }
       } else {
-        server.use(Resource.route(option));
+        if (port) {
+          server.use(Resource.route(option, port));
+        } else {
+          server.use(Resource.route(option));
+        }
       }
     });
     server.use((req: Request, res: Response, next: NextFunction) => {
@@ -34,7 +42,7 @@ export class Resource {
   /**
    * create route from option
    */
-  public static route<T, V>(option: ResourceOption<T, V>): Router {
+  public static route<T, V>(option: ResourceOption<T, V>, port?: Number): Router {
     const route = express.Router();
     const methods: Array<string> = option.methods || ["get", "post", "put", "delete"];
     const path = (<string> option.model.getTableName() || "").toLowerCase();
@@ -43,6 +51,9 @@ export class Resource {
         case "get": {
           [toString("/%s", path), toString("/%s/:id", path)].forEach((m: string) => {
             route.get(m, (req: Request, res: Response): void => {
+              if (port) {
+                req["xport"] = port;
+              }
               if (m.indexOf("/:id") === -1) {
                 httpMethods.all.on(req, res, option.model);
               } else {
@@ -55,6 +66,9 @@ export class Resource {
         case "post": {
           [toString("/%s", path)].forEach((m: string) => {
             route.post(m, (req: Request, res: Response): void => {
+              if (port) {
+                req["xport"] = port;
+              }
               httpMethods.create.on(req, res, option.model);
             });
           });
@@ -63,6 +77,9 @@ export class Resource {
         case "put":  {
           [toString("/%s/:id", path)].forEach((m: string) => {
             route.put(m, (req: Request, res: Response): void => {
+              if (port) {
+                req["xport"] = port;
+              }
               httpMethods.update.on(req, res, option.model);
             });
           });
@@ -71,6 +88,9 @@ export class Resource {
         case "delete": {
           [toString("/%s/:id", path)].forEach((m: string) => {
             route.delete(m, (req: Request, res: Response): void => {
+              if (port) {
+                req["xport"] = port;
+              }
               httpMethods.remove.on(req, res, option.model);
             });
           });

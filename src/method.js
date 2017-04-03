@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var data_1 = require("./data");
 var Observable_1 = require("rxjs/Observable");
 require("rxjs/add/observable/fromPromise");
@@ -75,13 +76,14 @@ var Sortify = (function () {
         var sortArgs = self.sorts(req);
         if (sortArgs.property) {
             var filter = function (l, r) {
-                if (typeof l[sortArgs.property] === "string") {
+                var t = typeof l[sortArgs.property];
+                if (t === "string") {
                     return l[sortArgs.property].localeCompare(r[sortArgs.property]);
                 }
-                else if (typeof l[sortArgs.property] === "number") {
+                else if (t === "number") {
                     return l[sortArgs.property] - r[sortArgs.property];
                 }
-                else if (typeof l[sortArgs.property] === "Date") {
+                else if (t === "Date") {
                     return l[sortArgs.property].getTime() - r[sortArgs.property].getTime();
                 }
                 return 0;
@@ -132,7 +134,14 @@ var Urlify = (function () {
      * create object href.
      */
     Urlify.prototype.object = function (req, data) {
-        var url = data_1.toString("%s://%s%s", req.protocol, req.hostname, req.baseUrl);
+        var xport = (req["xport"] || 80);
+        var url;
+        if (xport !== 80) {
+            url = data_1.toString("%s://%s:%d%s", req.protocol, req.hostname, xport, req.baseUrl);
+        }
+        else {
+            url = data_1.toString("%s://%s%s", req.protocol, req.hostname, req.baseUrl);
+        }
         var collection = req.url.split("/").map(function (d) { return d.trim(); });
         if (!data_1.isNullOrEmpty(req.query)) {
             // if url has any kind of query then we split it before we format content (index 0 was problem, it should be index 1)
@@ -153,14 +162,28 @@ var Urlify = (function () {
      * create collection of object href.
      */
     Urlify.prototype.collection = function (req, count) {
+        var xport = (req["xport"] || 80);
         var self = this;
-        var collectionArgs = {
-            href: data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url),
-            limit: parseInt(req.query.limit || 25),
-            offset: parseInt(req.query.offset || 0),
-            count: count
-        };
-        var uri = data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
+        var collectionArgs;
+        var uri;
+        if (xport !== 80) {
+            collectionArgs = {
+                href: data_1.toString("%s://%s%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, req.url),
+                limit: parseInt(req.query.limit || 25),
+                offset: parseInt(req.query.offset || 0),
+                count: count
+            };
+            uri = data_1.toString("%s://%s%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, (req.url.split("?")[0] || req.url));
+        }
+        else {
+            collectionArgs = {
+                href: data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url),
+                limit: parseInt(req.query.limit || 25),
+                offset: parseInt(req.query.offset || 0),
+                count: count
+            };
+            uri = data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
+        }
         var hasNext = count >= collectionArgs.limit;
         if (hasNext) {
             collectionArgs.next = self.properties(uri, req.query, (collectionArgs.offset + collectionArgs.limit));
