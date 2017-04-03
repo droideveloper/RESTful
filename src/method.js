@@ -164,24 +164,19 @@ var Urlify = (function () {
     Urlify.prototype.collection = function (req, count) {
         var xport = (req["xport"] || 80);
         var self = this;
-        var collectionArgs;
+        var collectionArgs = {
+            href: "",
+            limit: parseInt(req.query.limit || 25),
+            offset: parseInt(req.query.offset || 0),
+            count: count
+        };
         var uri;
         if (xport !== 80) {
-            collectionArgs = {
-                href: data_1.toString("%s://%s%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, req.url),
-                limit: parseInt(req.query.limit || 25),
-                offset: parseInt(req.query.offset || 0),
-                count: count
-            };
-            uri = data_1.toString("%s://%s%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, (req.url.split("?")[0] || req.url));
+            collectionArgs.href = data_1.toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, req.url);
+            uri = data_1.toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, (req.url.split("?")[0] || req.url));
         }
         else {
-            collectionArgs = {
-                href: data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url),
-                limit: parseInt(req.query.limit || 25),
-                offset: parseInt(req.query.offset || 0),
-                count: count
-            };
+            collectionArgs.href = data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url);
             uri = data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
         }
         var hasNext = count >= collectionArgs.limit;
@@ -260,8 +255,7 @@ var All = (function () {
             response.limit = args.limit;
             response.offset = args.offset;
             return response;
-        }).timeout(200)
-            .subscribe(function (response) { return res.json(response); }, function (error) {
+        }).subscribe(function (response) { return res.json(response); }, function (error) {
             if (!served) {
                 res.json({
                     status: 400,
@@ -309,7 +303,6 @@ var Detail = (function () {
             }).map(function (entity) { return urlify.on(req, entity); })
                 .map(function (entity) { return selectify.on(req, entity); })
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
-                .timeout(200)
                 .subscribe(function (response) { return res.json(response); }, function (error) {
                 if (!served) {
                     res.json({
@@ -349,7 +342,6 @@ var Create = (function () {
                 .map(function (entity) { return urlify.on(req, entity); })
                 .map(function (entity) { return selectify.on(req, entity); })
                 .map(function (entity) { return { code: 200, message: "success", data: entity }; })
-                .timeout(200)
                 .subscribe(function (response) { return res.json(response); }, function (error) {
                 if (!served) {
                     res.json({
@@ -392,7 +384,6 @@ var Update = (function () {
                 });
             })).concatMap(function (count) { return count; })
                 .map(function (count) { return { code: 200, message: "success", data: count }; })
-                .timeout(200)
                 .subscribe(function (response) { return res.json(response); }, function (error) {
                 if (!served) {
                     res.json({
@@ -433,7 +424,6 @@ var Remove = (function () {
                     data: error.message || "error occured in database transaction"
                 });
             })).map(function (count) { return { code: 200, message: "success", data: count }; })
-                .timeout(200)
                 .subscribe(function (response) { return res.json(response); }, function (error) {
                 if (!served) {
                     res.json({

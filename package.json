@@ -1,6 +1,6 @@
 {
   "name": "restful-express-sequelize",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Using Sequelize ORM for Express RESTful Services (Endpoints)",
   "main": "index.js",
   "types": "index.d.ts",

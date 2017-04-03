@@ -156,23 +156,18 @@ class Urlify<T extends SEntity> implements SQuery<T> {
   collection(req: Request, count: number): SCollectionArgs {
     const xport: Number = (req["xport"] || 80);
     const self = this;
-    let collectionArgs: SCollectionArgs;
+    let collectionArgs: SCollectionArgs = {
+        href: "",
+        limit: parseInt(req.query.limit || 25),
+        offset: parseInt(req.query.offset || 0),
+        count: count
+      };
     let uri: string;
     if (xport !== 80) {
-      collectionArgs = {
-        href: toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, req.url),
-        limit: parseInt(req.query.limit || 25),
-        offset: parseInt(req.query.offset || 0),
-        count: count
-      };
+      collectionArgs.href = toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, req.url);
       uri = toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, (req.url.split("?")[0] || req.url));
     } else {
-      collectionArgs = {
-        href: toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url),
-        limit: parseInt(req.query.limit || 25),
-        offset: parseInt(req.query.offset || 0),
-        count: count
-      };
+      collectionArgs.href = toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url);
       uri = toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
     }
     const hasNext = count >= collectionArgs.limit;
@@ -246,8 +241,7 @@ export class All<T, V> implements SRequest<T, V> {
        response.limit = args.limit;
        response.offset = args.offset;
        return response;
-     }).timeout(200)
-     .subscribe((response: SResponse<SEntity>) => res.json(response),
+     }).subscribe((response: SResponse<SEntity>) => res.json(response),
        error => {
          if (!served) {
            res.json({
@@ -294,7 +288,6 @@ export class Detail<T, V> implements SRequest<T, V> {
        }).map((entity: SEntity) => urlify.on(req, entity))
        .map((entity: SEntity) => selectify.on(req, entity))
        .map((entity: SEntity) => { return { code: 200, message: "success", data: entity }; })
-       .timeout(200)
        .subscribe((response: SResponse<SEntity>) => res.json(response),
        error => {
          if (!served) {
@@ -332,7 +325,6 @@ export class Create<T, V> implements SRequest<T, V> {
        .map((entity: SEntity) => urlify.on(req, entity))
        .map((entity: SEntity) => selectify.on(req, entity))
        .map((entity: SEntity) => { return { code: 200, message: "success", data: entity }; })
-       .timeout(200)
        .subscribe((response: SResponse<SEntity>) => res.json(response),
        error => {
          if (!served) {
@@ -373,7 +365,6 @@ export class Update<T, V> implements SRequest<T, V> {
           })
       ).concatMap((count: Array<number>) => count)
        .map((count: number) => { return { code: 200, message: "success", data: count }; })
-       .timeout(200)
        .subscribe((response: SResponse<number>) => res.json(response),
        error => {
          if (!served) {
@@ -412,7 +403,6 @@ export class Remove<T, V> implements SRequest<T, V> {
             });
           })
       ).map((count: number) => { return { code: 200, message: "success", data: count }; })
-       .timeout(200)
        .subscribe((response: SResponse<number>) => res.json(response),
        error => {
          if (!served) {
