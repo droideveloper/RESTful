@@ -230,8 +230,7 @@ module.exports = dbContext;
 ```
 
 ## Changes ##
-- Error callback for Sequelize failure with detailed content of error.
-- 404-500 error callback for Express with fair information.
+- optional port added for local projects.
 - bug fix.
 
 ## License ##
