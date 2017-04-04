@@ -11,7 +11,6 @@ Documentation for `express` or `sequelize`
 
 [Express](https://expressjs.com/en/4x/api.html) or [Sequelize](http://sequelize.readthedocs.io/en/v3/)
 
-### How to use ###
 
 (PS: for database example check [model](https://github.com/droideveloper/RESTful#models))
 
