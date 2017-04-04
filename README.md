@@ -1,5 +1,6 @@
 ##  RESTful - is easy to use restful service implementation for express and sequelize ##
 
+
 ### How to install ###
 
 with node package manager aka npm;
