@@ -1,62 +1,5 @@
 ##  RESTful - is easy to use restful service implementation for express and sequelize ##
 
-Registers your database context on restful definitions, and service is created with it at github [link.](https://github.com/droideveloper/RESTfulExample)
-
-For instance your database table is "Frameworks" in mysql registered as `/frameworks` for methods:
-  
-  * GET     /frameworks
-  * GET     /frameworks/:id
-  * POST    /frameworks
-  * PUT     /frameworks/:id
-  * DELETE  /frameworks/:id
-
-and by passing methods args on your registeration in array `["get", "post", "put", "delete"]`
-you are allowed to manipulate proper methods or register only your needs. P.S. ( as defaults all registered )
-
-supports some default query options;
-  
-- for array Response:
-  * select=property1,property2 (any property of model itself and some extras: id, href, createdAt, updatedAt)
-  * sort=property,type (any property of model and type as 'desc' or 'asc' is default )
-  * limit=number (25 is default)
-  * offset=number (0 is default)  
-    
-- for object Response:
-  * select=property1,property2 (any property of model itself and some extras: id, href, createdAt, updatedAt)  
-
-response are wrapped as follows;
-
-  for array responses:
-
-  `next` or `previous` properties might not exists depending on context. (optionals)
-  `data` property can be `null` or `[]`.
-
-  ```json
-  {
-    "code": 200,
-    "message": "success",
-    "data": [{ }],
-    "count": 1, 
-    "href": "$href", 
-    "next": "$next", 
-    "previous": "$previous", 
-    "limit": 25,
-    "offset": 0
-  }
-  ```
-
-  for object or primitive responses:
-
-  `data` property can be `null` or `{}`.
-
-  ```json
-  {
-    "code": 200,
-    "message": "success",
-    "data": { } 
-  }
-  ```
-
 ### How to install ###
 
 with node package manager aka npm;
@@ -71,7 +14,7 @@ Documentation for `express` or `sequelize`
 
 (PS: for database example check [model](https://github.com/droideveloper/RESTful#models))
 
-if you prefer javascript then in your server.js or index.js file;
+in your server.js or index.js file;
 
 ```javascript
 //imports
@@ -104,50 +47,11 @@ for (var property in dbContext) {
 }
 // finally register your method(s) on base as '/v1/endpoint'
 // base is (optional) context.Resource.register(server, model)
-context.Resource.register(server, models, "/v1/endpoint");
+// port is (optional) context.Resource.register(server, model) if port is not 80 then we bind
+// if you use it in local project or port specified on others it will be useful.
+context.Resource.register(server, models, "/v1/endpoint", port);
 // start serving
 server.listen(port, host, function () {
-  console.log("Server Running...");
-});
-```
-
-if you prefer typescript then in your index.ts or server.ts file;
-
-```typescript
-import * as express from "express";
-import * as orm from "sequelize";
-import * as bodyParser from "body-parser";
-import * as gzip from "compression";
-import { Request, Response } from "express";
-import { Resource, ResourceOption } from "restful-express-sequelize";
-import * as dbContext from "./models";
-
-const port = process.env.PORT || 52192;
-const host = process.env.HOST || "192.168.1.100";
-
-const server = express();
-
-server.use(bodyParser.json());
-server.use(bodyParser.urlencoded({ extended: true }));
-
-server.use(gzip({ filter: (req: Request, res: Response): boolean => {
-  return !req.headers["x-no-gzip"];
-}}));
-
-if(dbContext.sequelize) {
-  dbContext.sequelize.sync();
-}
-
-const models: Array<ResourceOption<{}, {}>> = [];
-for(const property in dbContext) {  
-  if(property !== "sequelize" && property !== "Sequelize") {
-      models.push({ model: dbContext[property] }); 
-  }  
-}
-
-Resource.register(server, models, "/v1/endpoint");
-
-server.listen(port, host, () => {
   console.log("Server Running...");
 });
 ```
@@ -228,6 +132,65 @@ sequelize.sync();
 // exports
 module.exports = dbContext;
 ```
+
+## For More and What we support ##
+
+Registers your database context on restful definitions, and service is created with it at github [link.](https://github.com/droideveloper/RESTfulExample)
+
+For instance your database table is "Frameworks" in mysql registered as `/frameworks` for methods:
+  
+  * GET     /frameworks
+  * GET     /frameworks/:id
+  * POST    /frameworks
+  * PUT     /frameworks/:id
+  * DELETE  /frameworks/:id
+
+and by passing methods args on your registeration in array `["get", "post", "put", "delete"]`
+you are allowed to manipulate proper methods or register only your needs. P.S. ( as defaults all registered )
+
+supports some default query options;
+  
+- for array Response:
+  * select=property1,property2 (any property of model itself and some extras: id, href, createdAt, updatedAt)
+  * sort=property,type (any property of model and type as 'desc' or 'asc' is default )
+  * limit=number (25 is default)
+  * offset=number (0 is default)  
+    
+- for object Response:
+  * select=property1,property2 (any property of model itself and some extras: id, href, createdAt, updatedAt)  
+
+response are wrapped as follows;
+
+  for array responses:
+
+  `next` or `previous` properties might not exists depending on context. (optionals)
+  `data` property can be `null` or `[]`.
+
+  ```json
+  {
+    "code": 200,
+    "message": "success",
+    "data": [{ }],
+    "count": 1, 
+    "href": "$href", 
+    "next": "$next", 
+    "previous": "$previous", 
+    "limit": 25,
+    "offset": 0
+  }
+  ```
+
+  for object or primitive responses:
+
+  `data` property can be `null` or `{}`.
+
+  ```json
+  {
+    "code": 200,
+    "message": "success",
+    "data": { } 
+  }
+  ```
 
 ## Changes ##
 - optional port added for local projects.
