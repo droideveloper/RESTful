@@ -1,97 +1,92 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var express = require("express");
-var data_1 = require("./src/data");
-var method_1 = require("./src/method");
+var utils = require("./src/data");
+var methods = require("./src/method");
 /**
  * Resource implementation
  */
-var Resource = /** @class */ (function () {
-    function Resource() {
-    }
-    /**
-     * Register as array or single
-     */
-    Resource.register = function (server, options, base, port) {
+let Resource = new Resource()
+class Resource {
+
+    register(server, options, base, port) {
         options.forEach(function (option) {
             if (base) {
-                if (port) {
-                    server.use(base, Resource.route(option, port));
-                }
-                else {
-                    server.use(base, Resource.route(option));
-                }
+              if (port) {
+                server.use(base, Resource.route(option, port));
+              }
+              else {
+                server.use(base, Resource.route(option));
+              }
             }
             else {
-                if (port) {
-                    server.use(Resource.route(option, port));
-                }
-                else {
-                    server.use(Resource.route(option));
-                }
+              if (port) {
+                server.use(Resource.route(option, port));
+              }
+              else {
+                server.use(Resource.route(option));
+              }
             }
         });
         server.use(function (req, res, next) {
-            method_1.httpMethods.error404(req, res, next);
+          methods.httpMethods.error404(req, res, next);
         });
         server.use(function (error, req, res, next) {
-            method_1.httpMethods.error500(error, req, res, next);
+          methods.httpMethods.error500(error, req, res, next);
         });
-    };
-    /**
-     * create route from option
-     */
-    Resource.route = function (option, port) {
-        var route = express.Router();
-        var methods = option.methods || ["get", "post", "put", "delete"];
-        var path = (option.model.getTableName() || "").toLowerCase();
+    }
+
+    route(option, port) {
+        let route = express.Router();
+        let methods = option.methods || ["get", "post", "put", "delete"];
+        let path = (option.model.getTableName() || "").toLowerCase();
         methods.forEach(function (method) {
             switch (method.toLowerCase()) {
                 case "get": {
-                    [data_1.toString("/%s", path), data_1.toString("/%s/:id", path)].forEach(function (m) {
+                    [utils.toString("/%s", path), utils.toString("/%s/:id", path)].forEach(function (m) {
                         route.get(m, function (req, res) {
                             if (port) {
                                 req["xport"] = port;
                             }
                             if (m.indexOf("/:id") === -1) {
-                                method_1.httpMethods.all.on(req, res, option.model);
+                                methods.httpMethods.all.on(req, res, option.model);
                             }
                             else {
-                                method_1.httpMethods.detail.on(req, res, option.model);
+                                methods.httpMethods.detail.on(req, res, option.model);
                             }
                         });
                     });
                     break;
                 }
                 case "post": {
-                    [data_1.toString("/%s", path)].forEach(function (m) {
+                    [utils.toString("/%s", path)].forEach(function (m) {
                         route.post(m, function (req, res) {
                             if (port) {
                                 req["xport"] = port;
                             }
-                            method_1.httpMethods.create.on(req, res, option.model);
+                            methods.httpMethods.create.on(req, res, option.model);
                         });
                     });
                     break;
                 }
                 case "put": {
-                    [data_1.toString("/%s/:id", path)].forEach(function (m) {
+                    [utils.toString("/%s/:id", path)].forEach(function (m) {
                         route.put(m, function (req, res) {
                             if (port) {
                                 req["xport"] = port;
                             }
-                            method_1.httpMethods.update.on(req, res, option.model);
+                            methods.httpMethods.update.on(req, res, option.model);
                         });
                     });
                     break;
                 }
                 case "delete": {
-                    [data_1.toString("/%s/:id", path)].forEach(function (m) {
+                    [utils.toString("/%s/:id", path)].forEach(function (m) {
                         route.delete(m, function (req, res) {
                             if (port) {
                                 req["xport"] = port;
                             }
-                            method_1.httpMethods.remove.on(req, res, option.model);
+                            methods.httpMethods.remove.on(req, res, option.model);
                         });
                     });
                     break;
@@ -102,7 +97,6 @@ var Resource = /** @class */ (function () {
             }
         });
         return route;
-    };
-    return Resource;
-}());
+    }
+}
 exports.Resource = Resource;
