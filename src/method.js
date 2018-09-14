@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var data_1 = require("./data");
-var Observable_1 = require("rxjs/Observable");
+var utils = require("./data");
+var Rx = require("rxjs/Observable");
 require("rxjs/add/observable/fromPromise");
 require("rxjs/add/observable/empty");
 require("rxjs/add/observable/of");
@@ -12,7 +12,7 @@ require("rxjs/add/operator/mergeMap");
 /**
  * parse key-value
  */
-var toWhere = function (key, value) {
+let toWhere = function (key, value) {
     var opt = { where: {} };
     opt.where[key] = value;
     return opt;
@@ -103,16 +103,16 @@ class Urlify {
     }
 
     object(req, data) {
-        let xport = req.xport || 80;
+        let xport = req.socket.localPort || req.xport || 80;
         let url;
         if (xport !== 80) {
-            url = data_1.toString("%s://%s:%d%s", req.protocol, req.hostname, xport, req.baseUrl);
+            url = utils.toString("%s://%s:%d%s", req.protocol, req.hostname, xport, req.baseUrl);
         }
         else {
-            url = data_1.toString("%s://%s%s", req.protocol, req.hostname, req.baseUrl);
+            url = utils.toString("%s://%s%s", req.protocol, req.hostname, req.baseUrl);
         }
         var collection = req.url.split("/").map(function (d) { return d.trim(); });
-        if (!data_1.isNullOrEmpty(req.query)) {
+        if (!utils.isNullOrEmpty(req.query)) {
             // if url has any kind of query then we split it before we format content (index 0 was problem, it should be index 1)
             var pathCollection = collection[1].split("?").map(function (d) { return d.trim(); });
             // detail object might contain only select query for filtering on properties.      
@@ -129,7 +129,7 @@ class Urlify {
     }
 
     collection(req, count) {
-        let xport = req.xport || 80;
+        let xport = req.socket.localPort || req.xport || 80;
         let self = this;
         let collectionArgs = {
             href: "",
@@ -139,12 +139,12 @@ class Urlify {
         };
         let uri;
         if (xport !== 80) {
-            collectionArgs.href = data_1.toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, req.url);
-            uri = data_1.toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, (req.url.split("?")[0] || req.url));
+            collectionArgs.href = utils.toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, req.url);
+            uri = utils.toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, (req.url.split("?")[0] || req.url));
         }
         else {
-            collectionArgs.href = data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url);
-            uri = data_1.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
+            collectionArgs.href = utils.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, req.url);
+            uri = utils.toString("%s://%s%s%s", req.protocol, req.hostname, req.baseUrl, (req.url.split("?")[0] || req.url));
         }
         var hasNext = count >= collectionArgs.limit;
         if (hasNext) {
@@ -188,7 +188,7 @@ class All {
         var served = false;
         var limit = parseInt(req.query.limit || 25); // defults for 'limit'
         var offset = parseInt(req.query.offset || 0); // defults for 'offset'
-        Observable_1.Observable.fromPromise(model.all({
+        Rx.Observable.fromPromise(model.all({
             limit: limit,
             offset: offset,
             include: model.map || []
@@ -244,7 +244,7 @@ class Detail {
             if (model.map) {
                 where["include"] = model.map;
             }
-            Observable_1.Observable.fromPromise(model.find(where)
+            Rx.Observable.fromPromise(model.find(where)
                 .catch(function (error) {
                 served = true;
                 res.json({
@@ -254,11 +254,11 @@ class Detail {
                 });
             })).map(function (entity) { return objectify.on(entity); })
                .mergeMap(function (entity) {
-                  if (data_1.isNullOrEmpty(entity)) {
+                  if (utils.isNullOrEmpty(entity)) {
                     res.json({ code: 400, message: "no such object exists.", data: null });
-                    return Observable_1.Observable.empty();
+                    return Rx.Observable.empty();
                   }
-                  return Observable_1.Observable.of(entity);
+                  return Rx.Observable.of(entity);
             }).map(function (entity) { return selectify.on(req, entity); })
               .map(function (entity) { return urlify.on(req, entity); })
               .map(function (entity) { return { code: 200, message: "success", data: entity }; })
@@ -286,8 +286,8 @@ class Create {
     on(req, res, model) {
         var served = false;
         var object = (req.body || {});
-        if (!data_1.isNullOrEmpty(object)) {
-            Observable_1.Observable.fromPromise(model.create(object)
+        if (!utils.isNullOrEmpty(object)) {
+            Rx.Observable.fromPromise(model.create(object)
                .catch(function (error) {
                   served = true;
                   res.json({
@@ -324,12 +324,12 @@ class Update {
         var served = false;
         var objectId = parseInt(req.params.id || 0);
         var object = (req.body || {});
-        if (objectId > 0 && !data_1.isNullOrEmpty(object)) {
+        if (objectId > 0 && !utils.isNullOrEmpty(object)) {
             var where = toWhere(model.primaryKeyName || "id", objectId);
             if (model.map) {
                 where["include"] = model.map;
             }
-            Observable_1.Observable.fromPromise(model.update(object, where)
+            Rx.Observable.fromPromise(model.update(object, where)
                 .catch(function (error) {
                   served = true;
                   res.json({
@@ -368,7 +368,7 @@ class Remove {
             if (model.map) {
                 where["include"] = model.map;
             }
-            Observable_1.Observable.fromPromise(model.destroy(where)
+            Rx.Observable.fromPromise(model.destroy(where)
                 .catch(function (error) {
                   served = true;
                   res.json({
@@ -397,11 +397,11 @@ exports.Remove = Remove;
  * export httpMethods handlers.
  */
 exports.httpMethods = {
-    all: new All(),
-    detail: new Detail(),
-    create: new Create(),
-    update: new Update(),
-    remove: new Remove(),
+    all: All,
+    detail: Detail,
+    create: Create,
+    update: Update,
+    remove: Remove,
     error404: function (req, res, next) {
         next({ status: 404, message: "no such url exists.", name: "NotFound." });
     },
