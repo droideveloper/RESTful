@@ -1,4 +1,3 @@
-/// <reference types="express" />
 import { Request, Response, NextFunction } from "express";
 import { SRequest, Model, SError } from "./data";
 import "rxjs/add/observable/fromPromise";

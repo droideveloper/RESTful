@@ -1,4 +1,3 @@
-/// <reference types="express" />
 /// <reference types="node" />
 import { Request, Response } from "express";
 import * as orm from "sequelize";

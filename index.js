@@ -6,7 +6,7 @@ var method_1 = require("./src/method");
 /**
  * Resource implementation
  */
-var Resource = (function () {
+var Resource = /** @class */ (function () {
     function Resource() {
     }
     /**

@@ -1,4 +1,3 @@
-/// <reference types="express" />
 import { Router, Express } from "express";
 import { Model } from "./src/data";
 /**

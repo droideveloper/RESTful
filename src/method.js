@@ -20,60 +20,36 @@ var toWhere = function (key, value) {
 /**
  * Implementation of SObject
  */
-var Objectify = (function () {
-    function Objectify() {
+class Objectify {
+    on(data) {
+        return JSON.parse(JSOn.stringify(data));
     }
-    Objectify.prototype.on = function (data) {
-        return JSON.parse(JSON.stringify(data));
-    };
-    return Objectify;
-}());
+}
 /**
  * Implementation of SQuery for ?select=x,y,z
  */
-var Selectify = (function () {
-    function Selectify() {
-    }
-    Selectify.prototype.on = function (req, data) {
-        var self = this;
-        var properties = self.selects(req);
-        if (properties) {
+class Selectify {
+    on (req, data) {
+        const fields = req.query.fields;
+        if (fields) {
             if (Array.isArray(data)) {
-                return data.map(function (entity) {
-                    return self.filter(properties, entity);
-                });
+                return data.map(entity => this.filter(fields, entity));
             }
-            return self.filter(properties, data);
+            return this.filter(fields, data);
         }
         return data;
-    };
-    /**
-     * select properties from query of request.
-     */
-    Selectify.prototype.selects = function (req) {
-        return (req.query.select || "")
-            .split(",")
-            .map(function (select) { return select.trim(); });
-    };
-    /**
-     * filter object with properties found.
-     */
-    Selectify.prototype.filter = function (properties, entity) {
-        var filtered = {};
-        properties.forEach(function (property) { return filtered[property] = entity[property]; });
-        return data_1.isNullOrEmpty(filtered) ? entity : filtered;
-    };
-    return Selectify;
-}());
+    }
+    // filter  
+    filter(properties, entity){
+        return untyped.validate(entity, untyped.parse(properties));
+    }
+}
 /**
  * Implementation of SQuery for ?sort=x,desc
  */
-var Sortify = (function () {
-    function Sortify() {
-    }
-    Sortify.prototype.on = function (req, data) {
-        var self = this;
-        var sortArgs = self.sorts(req);
+class Sortify {
+    on(req, data) {
+        let sortArgs = this.sorts(req.query.sort);
         if (sortArgs.property) {
             var filter = function (l, r) {
                 var t = typeof l[sortArgs.property];
@@ -95,28 +71,23 @@ var Sortify = (function () {
             return data.sort(filter);
         }
         return data;
-    };
-    /**
-     * sort property and type from query of request.
-     */
-    Sortify.prototype.sorts = function (req) {
-        var args = (req.query.sort || "")
-            .split(",")
-            .map(function (sort) { return sort.trim(); });
-        return { property: args[0] || "",
-            desc: (args[1] || "asc").toLowerCase() === "desc"
+    } 
+    // sort func
+    sorts(query) {
+        let [property, desc = 'asc'] = (query || '').split(',').map(sort => sort.trim());
+        return {
+            property,
+            desc: desc.toLowerCase() === 'desc'
         };
-    };
-    return Sortify;
-}());
+    }
+}
 /**
  * Implementation of SQuery for $href property
  */
-var Urlify = (function () {
-    function Urlify() {
-    }
-    Urlify.prototype.on = function (req, data) {
-        var self = this;
+class Urlify {
+
+    on(req, data) {
+        let self = this;
         if (Array.isArray(data)) {
             return data.map(function (entity) {
                 if (!entity.href) {
@@ -129,13 +100,11 @@ var Urlify = (function () {
             data.href = self.object(req, data);
         }
         return data;
-    };
-    /**
-     * create object href.
-     */
-    Urlify.prototype.object = function (req, data) {
-        var xport = (req["xport"] || 80);
-        var url;
+    }
+
+    object(req, data) {
+        let xport = req.xport || 80;
+        let url;
         if (xport !== 80) {
             url = data_1.toString("%s://%s:%d%s", req.protocol, req.hostname, xport, req.baseUrl);
         }
@@ -157,20 +126,18 @@ var Urlify = (function () {
             return url.concat(req.url);
         }
         return url.concat(req.url, "/", data.id.toString());
-    };
-    /**
-     * create collection of object href.
-     */
-    Urlify.prototype.collection = function (req, count) {
-        var xport = (req["xport"] || 80);
-        var self = this;
-        var collectionArgs = {
+    }
+
+    collection(req, count) {
+        let xport = req.xport || 80;
+        let self = this;
+        let collectionArgs = {
             href: "",
             limit: parseInt(req.query.limit || 25),
             offset: parseInt(req.query.offset || 0),
             count: count
         };
-        var uri;
+        let uri;
         if (xport !== 80) {
             collectionArgs.href = data_1.toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, req.url);
             uri = data_1.toString("%s://%s:%d%s%s", req.protocol, req.hostname, xport, req.baseUrl, (req.url.split("?")[0] || req.url));
@@ -188,17 +155,13 @@ var Urlify = (function () {
             collectionArgs.previous = self.properties(uri, req.query, (collectionArgs.offset - collectionArgs.limit));
         }
         return collectionArgs;
-    };
-    /**
-     * controls if uri has previously query.
-     */
-    Urlify.prototype.hasPreviousQuery = function (uri) {
+    } 
+
+    hasPreviousQuery(uri) {
         return uri && uri.indexOf("?") === -1;
-    };
-    /**
-     * read properties on query and write them again, as long as it is not `offset`
-     */
-    Urlify.prototype.properties = function (uri, query, offset) {
+    }
+
+    properties(uri, query, offset) {
         var self = this;
         for (var property in query) {
             if (query.hasOwnProperty(property)) {
@@ -206,24 +169,22 @@ var Urlify = (function () {
             }
         }
         return uri;
-    };
-    return Urlify;
-}());
+    }
+}
 /** Instance of Objectify */
-var objectify = new Objectify();
+let objectify = new Objectify();
 /** Instance of Selectify */
-var selectify = new Selectify();
+let selectify = new Selectify();
 /** Instance of Sortify */
-var sortify = new Sortify();
+let sortify = new Sortify();
 /** Instance of Urlify */
-var urlify = new Urlify();
+let urlify = new Urlify();
 /**
  * Implementation of SRequest for All.
  */
-var All = (function () {
-    function All() {
-    }
-    All.prototype.on = function (req, res, model) {
+let All = new All()
+class All {
+    on(req, res, model) {
         var served = false;
         var limit = parseInt(req.query.limit || 25); // defults for 'limit'
         var offset = parseInt(req.query.offset || 0); // defults for 'offset'
@@ -239,10 +200,10 @@ var All = (function () {
                 data: error.message || "error occured in database transaction"
             });
         })).map(function (entities) { return objectify.on(entities); })
-            .map(function (entities) { return urlify.on(req, entities); })
-            .map(function (entities) { return selectify.on(req, entities); })
-            .map(function (entities) { return sortify.on(req, entities); })
-            .map(function (entities) {
+           .map(function (entities) { return selectify.on(req, entities); })
+           .map(function (entities) { return urlify.on(req, entities); })
+           .map(function (entities) { return sortify.on(req, entities); })
+           .map(function (entities) {
             var args = urlify.collection(req, entities.length);
             var response = { code: 200, message: "success", data: entities, href: args.href };
             if (args.next) {
@@ -264,9 +225,8 @@ var All = (function () {
                 });
             }
         });
-    };
-    return All;
-}());
+    }
+}
 exports.All = All;
 /**
  * Implementation of SRequest for Detail.
@@ -274,10 +234,9 @@ exports.All = All;
  *  - idKey: string
  *  - includeModels: Array<orm.Model<?, ?>>
  */
-var Detail = (function () {
-    function Detail() {
-    }
-    Detail.prototype.on = function (req, res, model) {
+let Detail = new Detail()
+class Detail {
+    on(req, res, model) {
         var served = false;
         var objectId = parseInt(req.params.id || 0);
         if (objectId > 0) {
@@ -294,16 +253,16 @@ var Detail = (function () {
                     data: error.message || "error occured in database transaction"
                 });
             })).map(function (entity) { return objectify.on(entity); })
-                .mergeMap(function (entity) {
-                if (data_1.isNullOrEmpty(entity)) {
+               .mergeMap(function (entity) {
+                  if (data_1.isNullOrEmpty(entity)) {
                     res.json({ code: 400, message: "no such object exists.", data: null });
                     return Observable_1.Observable.empty();
-                }
-                return Observable_1.Observable.of(entity);
-            }).map(function (entity) { return urlify.on(req, entity); })
-                .map(function (entity) { return selectify.on(req, entity); })
-                .map(function (entity) { return { code: 200, message: "success", data: entity }; })
-                .subscribe(function (response) { return res.json(response); }, function (error) {
+                  }
+                  return Observable_1.Observable.of(entity);
+            }).map(function (entity) { return selectify.on(req, entity); })
+              .map(function (entity) { return urlify.on(req, entity); })
+              .map(function (entity) { return { code: 200, message: "success", data: entity }; })
+              .subscribe(function (response) { return res.json(response); }, function (error) {
                 if (!served) {
                     res.json({
                         status: 400,
@@ -316,56 +275,52 @@ var Detail = (function () {
         else {
             throw { status: 400, message: "invalid object id, check param id.", name: "InvalidObjectId" };
         }
-    };
-    return Detail;
-}());
+    }
+}
 exports.Detail = Detail;
 /**
  * Implementation of SRequest for Create.
  */
-var Create = (function () {
-    function Create() {
-    }
-    Create.prototype.on = function (req, res, model) {
+let Create = new Create()
+class Create {
+    on(req, res, model) {
         var served = false;
         var object = (req.body || {});
         if (!data_1.isNullOrEmpty(object)) {
             Observable_1.Observable.fromPromise(model.create(object)
-                .catch(function (error) {
-                served = true;
-                res.json({
+               .catch(function (error) {
+                  served = true;
+                  res.json({
                     status: 400,
                     message: error.name || "database error",
                     data: error.message || "error occured in database transaction"
                 });
             })).map(function (entity) { return objectify.on(entity); })
-                .map(function (entity) { return urlify.on(req, entity); })
-                .map(function (entity) { return selectify.on(req, entity); })
-                .map(function (entity) { return { code: 200, message: "success", data: entity }; })
-                .subscribe(function (response) { return res.json(response); }, function (error) {
-                if (!served) {
+               .map(function (entity) { return selectify.on(req, entity); })
+               .map(function (entity) { return urlify.on(req, entity); })
+               .map(function (entity) { return { code: 200, message: "success", data: entity }; })
+               .subscribe(function (response) { return res.json(response); }, function (error) {
+                  if (!served) {
                     res.json({
                         status: 400,
                         message: error.name || "database error",
                         data: error.message || "error occured in database transaction"
                     });
-                }
+                  }
             });
         }
         else {
             throw { status: 400, message: "invalid object", name: "InvalidObject" };
         }
-    };
-    return Create;
-}());
+    }
+}
 exports.Create = Create;
 /**
  * Implementation of SRequest for Update.
  */
-var Update = (function () {
-    function Update() {
-    }
-    Update.prototype.on = function (req, res, model) {
+let Update = new Update()
+class Update {
+    on(req, res, model) {
         var served = false;
         var objectId = parseInt(req.params.id || 0);
         var object = (req.body || {});
@@ -376,15 +331,15 @@ var Update = (function () {
             }
             Observable_1.Observable.fromPromise(model.update(object, where)
                 .catch(function (error) {
-                served = true;
-                res.json({
+                  served = true;
+                  res.json({
                     status: 400,
                     message: error.name || "database error",
                     data: error.message || "error occured in database transaction"
                 });
             })).concatMap(function (count) { return count; })
-                .map(function (count) { return { code: 200, message: "success", data: count }; })
-                .subscribe(function (response) { return res.json(response); }, function (error) {
+               .map(function (count) { return { code: 200, message: "success", data: count }; })
+               .subscribe(function (response) { return res.json(response); }, function (error) {
                 if (!served) {
                     res.json({
                         status: 400,
@@ -396,18 +351,16 @@ var Update = (function () {
         }
         else {
             throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };
-        }
-    };
-    return Update;
-}());
+        } 
+    }
+}
 exports.Update = Update;
 /**
  * Implementation of SRequest for Remove.
  */
-var Remove = (function () {
-    function Remove() {
-    }
-    Remove.prototype.on = function (req, res, model) {
+let Remove = new Remove()
+class Remove {
+    on(req, res, model) {
         var served = false;
         var objectId = parseInt(req.params.id || 0);
         if (objectId > 0) {
@@ -417,14 +370,14 @@ var Remove = (function () {
             }
             Observable_1.Observable.fromPromise(model.destroy(where)
                 .catch(function (error) {
-                served = true;
-                res.json({
+                  served = true;
+                  res.json({
                     status: 400,
                     message: error.name || "database error",
                     data: error.message || "error occured in database transaction"
                 });
             })).map(function (count) { return { code: 200, message: "success", data: count }; })
-                .subscribe(function (response) { return res.json(response); }, function (error) {
+               .subscribe(function (response) { return res.json(response); }, function (error) {
                 if (!served) {
                     res.json({
                         status: 400,
@@ -437,9 +390,8 @@ var Remove = (function () {
         else {
             throw { status: 400, message: "no such object exists.", name: "NoSuchObjectExists." };
         }
-    };
-    return Remove;
-}());
+    }
+}
 exports.Remove = Remove;
 /**
  * export httpMethods handlers.
